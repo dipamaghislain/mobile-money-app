@@ -1,0 +1,37 @@
+<div class="merchant-container">
+  <header class="merchant-header">
+    <h1>
+      <mat-icon>storefront</mat-icon>
+      Commerçants partenaires
+    </h1>
+    <p class="subtitle">
+      Sélectionnez un commerçant pour initier un paiement sécurisé.
+    </p>
+  </header>
+
+  <section class="merchant-list-section">
+    <div class="merchant-card" *ngFor="let merchant of merchants">
+      <div class="merchant-icon">
+        <mat-icon>{{ merchant.icon }}</mat-icon>
+      </div>
+      <div class="merchant-info">
+        <h2>{{ merchant.nom }}</h2>
+        <p class="category">{{ merchant.categorie }}</p>
+        <p class="description" *ngIf="merchant.description">
+          {{ merchant.description }}
+        </p>
+      </div>
+      <div class="merchant-actions">
+        <button mat-raised-button color="primary" [routerLink]="['/merchant/pay']" [queryParams]="{ id: merchant.id }">
+          <mat-icon>payments</mat-icon>
+          Payer
+        </button>
+      </div>
+    </div>
+
+    <div class="empty-merchant" *ngIf="merchants.length === 0">
+      <mat-icon>info</mat-icon>
+      <p>Aucun commerçant disponible pour le moment.</p>
+    </div>
+  </section>
+</div>

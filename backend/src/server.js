@@ -1,7 +1,16 @@
 // backend/src/server.js
 
+const dotenv = require('dotenv');
+
+// Charger les variables d'environnement EN PREMIER
+dotenv.config();
+
+const { validateEnv } = require('./config/env');
 const app = require('./app');
 const connectDB = require('./config/database');
+
+// Valider les variables d'environnement
+validateEnv();
 
 // Connecter à MongoDB
 connectDB();

@@ -23,6 +23,7 @@
   },
   "private": true,
   "dependencies": {
+    "@angular/animations": "^20.3.14",
     "@angular/cdk": "^20.2.14",
     "@angular/common": "^20.3.0",
     "@angular/compiler": "^20.3.0",
@@ -32,8 +33,14 @@
     "@angular/platform-browser": "^20.3.0",
     "@angular/platform-server": "^20.3.0",
     "@angular/router": "^20.3.0",
-    "@angular/ssr": "^20.3.6",
+    "@angular/ssr": "^20.3.13",
+    "@nguniversal/common": "^16.2.0",
+    "@nguniversal/express-engine": "^16.2.0",
+    "chart.js": "^4.5.1",
     "express": "^5.1.0",
+    "jwt-decode": "^4.0.0",
+    "ng2-charts": "^8.0.0",
+    "ngx-toastr": "^19.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

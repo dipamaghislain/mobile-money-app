@@ -1,0 +1,109 @@
+<div class="register-container">
+    <mat-card class="register-card">
+        <mat-card-header>
+            <mat-card-title>
+                <mat-icon class="title-icon">account_balance_wallet</mat-icon>
+                Créer un compte
+            </mat-card-title>
+            <mat-card-subtitle>Rejoignez Mobile Money aujourd'hui</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+            @if (errorMessage()) {
+            <div class="error-message">
+                <mat-icon>error_outline</mat-icon>
+                {{ errorMessage() }}
+            </div>
+            }
+
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Nom complet</mat-label>
+                    <input matInput type="text" formControlName="nomComplet" placeholder="Jean Dupont">
+                    <mat-icon matPrefix>person</mat-icon>
+                    @if (f['nomComplet'].errors?.['required'] && f['nomComplet'].touched) {
+                    <mat-error>Le nom complet est requis</mat-error>
+                    }
+                    @if (f['nomComplet'].errors?.['minlength'] && f['nomComplet'].touched) {
+                    <mat-error>Le nom doit contenir au moins 3 caractères</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Numéro de téléphone</mat-label>
+                    <input matInput type="tel" formControlName="telephone" placeholder="0612345678">
+                    <mat-icon matPrefix>phone</mat-icon>
+                    @if (f['telephone'].errors?.['required'] && f['telephone'].touched) {
+                    <mat-error>Le numéro de téléphone est requis</mat-error>
+                    }
+                    @if (f['telephone'].errors?.['pattern'] && f['telephone'].touched) {
+                    <mat-error>Format de téléphone invalide</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Email (optionnel)</mat-label>
+                    <input matInput type="email" formControlName="email" placeholder="jean@example.com">
+                    <mat-icon matPrefix>email</mat-icon>
+                    @if (f['email'].errors?.['email'] && f['email'].touched) {
+                    <mat-error>Format d'email invalide</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Type de compte</mat-label>
+                    <mat-select formControlName="role">
+                        <mat-option value="client">Client</mat-option>
+                        <mat-option value="marchand">Marchand</mat-option>
+                    </mat-select>
+                    <mat-icon matPrefix>badge</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Mot de passe</mat-label>
+                    <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="motDePasse">
+                    <mat-icon matPrefix>lock</mat-icon>
+                    <button mat-icon-button matSuffix (click)="hidePassword.set(!hidePassword())" type="button">
+                        <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    </button>
+                    @if (f['motDePasse'].errors?.['required'] && f['motDePasse'].touched) {
+                    <mat-error>Le mot de passe est requis</mat-error>
+                    }
+                    @if (f['motDePasse'].errors?.['minlength'] && f['motDePasse'].touched) {
+                    <mat-error>Le mot de passe doit contenir au moins 6 caractères</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Confirmer le mot de passe</mat-label>
+                    <input matInput [type]="hideConfirmPassword() ? 'password' : 'text'"
+                        formControlName="confirmMotDePasse">
+                    <mat-icon matPrefix>lock_outline</mat-icon>
+                    <button mat-icon-button matSuffix (click)="hideConfirmPassword.set(!hideConfirmPassword())"
+                        type="button">
+                        <mat-icon>{{ hideConfirmPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    </button>
+                    @if (f['confirmMotDePasse'].errors?.['required'] && f['confirmMotDePasse'].touched) {
+                    <mat-error>La confirmation est requise</mat-error>
+                    }
+                    @if (f['confirmMotDePasse'].errors?.['mismatch'] && f['confirmMotDePasse'].touched) {
+                    <mat-error>Les mots de passe ne correspondent pas</mat-error>
+                    }
+                </mat-form-field>
+
+                <button mat-raised-button color="primary" type="submit" class="full-width submit-btn"
+                    [disabled]="loading() || registerForm.invalid">
+                    @if (loading()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                    } @else {
+                    Créer mon compte
+                    }
+                </button>
+            </form>
+
+            <div class="login-link">
+                <p>Déjà un compte ? <a routerLink="/auth/login">Se connecter</a></p>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</div>

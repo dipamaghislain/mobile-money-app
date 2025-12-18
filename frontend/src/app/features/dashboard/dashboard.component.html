@@ -1,0 +1,115 @@
+<div class="dashboard-container">
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="header-content">
+            <div class="user-info" style="cursor: pointer" routerLink="/profile">
+                <h1>{{ greeting() }}, {{ user()?.nomComplet || 'Utilisateur' }}</h1>
+                <p class="user-phone">{{ user()?.telephone }}</p>
+            </div>
+            <div class="header-actions">
+                <button mat-icon-button (click)="refresh()" aria-label="Actualiser">
+                    <mat-icon>refresh</mat-icon>
+                </button>
+                <button mat-icon-button (click)="logout()" aria-label="Déconnexion">
+                    <mat-icon>logout</mat-icon>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    @if (loading()) {
+    <div class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Chargement...</p>
+    </div>
+    } @else if (error()) {
+    <div class="error-container">
+        <mat-icon>error_outline</mat-icon>
+        <p>{{ error() }}</p>
+        <button mat-raised-button color="primary" (click)="loadDashboardData()">
+            Réessayer
+        </button>
+    </div>
+    } @else {
+    <!-- Carte Solde -->
+    <mat-card class="balance-card">
+        <mat-card-content>
+            <div class="balance-label">Solde disponible</div>
+            <div class="balance-amount">
+                {{ wallet()?.solde | number:'1.0-0' }} {{ wallet()?.devise }}
+            </div>
+            <div class="balance-status">
+                <mat-icon>verified</mat-icon>
+                Compte {{ wallet()?.statut }}
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Actions rapides -->
+    <div class="quick-actions">
+        <h2>Actions rapides</h2>
+        <div class="actions-grid">
+            <button mat-raised-button class="action-btn deposit" (click)="openDepositModal()">
+                <mat-icon>add_circle</mat-icon>
+                <span>Dépôt</span>
+            </button>
+            <button mat-raised-button class="action-btn withdraw" (click)="openWithdrawModal()">
+                <mat-icon>remove_circle</mat-icon>
+                <span>Retrait</span>
+            </button>
+            <button mat-raised-button class="action-btn transfer" (click)="openTransferModal()">
+                <mat-icon>send</mat-icon>
+                <span>Transfert</span>
+            </button>
+            <button mat-raised-button class="action-btn payment" routerLink="/transactions/payment">
+                <mat-icon>store</mat-icon>
+                <span>Paiement</span>
+            </button>
+            <button mat-raised-button class="action-btn savings" routerLink="/savings">
+                <mat-icon>savings</mat-icon>
+                <span>Épargne</span>
+            </button>
+            <button mat-raised-button class="action-btn merchant" routerLink="/merchant">
+                <mat-icon>storefront</mat-icon>
+                <span>Commerçants</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Transactions récentes -->
+    <mat-card class="transactions-card">
+        <mat-card-header>
+            <mat-card-title>Transactions récentes</mat-card-title>
+            <button mat-button color="primary" routerLink="/transactions">
+                Voir tout
+            </button>
+        </mat-card-header>
+        <mat-card-content>
+            @if (transactions().length === 0) {
+            <div class="empty-transactions">
+                <mat-icon>receipt_long</mat-icon>
+                <p>Aucune transaction récente</p>
+            </div>
+            } @else {
+            <mat-list>
+                @for (transaction of transactions(); track transaction.id) {
+                <mat-list-item class="transaction-item">
+                    <div class="transaction-icon" [class]="getTransactionColor(transaction.type)">
+                        <mat-icon>{{ getTransactionIcon(transaction.type) }}</mat-icon>
+                    </div>
+                    <div class="transaction-details">
+                        <span class="transaction-type">{{ getTransactionLabel(transaction.type) }}</span>
+                        <span class="transaction-date">{{ transaction.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                    <div class="transaction-amount" [class]="getTransactionColor(transaction.type)">
+                        {{ transaction.montant | currency:transaction.devise:'symbol':'1.0-0' }}
+                    </div>
+                </mat-list-item>
+                <mat-divider></mat-divider>
+                }
+            </mat-list>
+            }
+        </mat-card-content>
+    </mat-card>
+    }
+</div>

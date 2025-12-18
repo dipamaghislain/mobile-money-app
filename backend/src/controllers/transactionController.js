@@ -1,5 +1,6 @@
 // backend/src/controllers/transactionController.js
 
+const mongoose = require('mongoose');
 const Transaction = require('../models/Transaction');
 const Wallet = require('../models/Wallet');
 const User = require('../models/User');
@@ -45,7 +46,7 @@ exports.deposit = async (req, res) => {
       utilisateurDestinationId: req.user.id,
       description: `Dépôt depuis ${source || 'agent'}`,
       referenceExterne: Transaction.genererReference(),
-      statut: 'en_attente',
+      statut: 'EN_ATTENTE',
     });
 
     const soldeAvant = wallet.solde;
@@ -54,7 +55,7 @@ exports.deposit = async (req, res) => {
     await wallet.crediter(amount);
 
     // Mettre à jour la transaction comme réussie
-    transaction.statut = 'reussie';
+    transaction.statut = 'SUCCES';
     transaction.soldeAvantDestination = soldeAvant;
     transaction.soldeApresDestination = wallet.solde;
     await transaction.save();
@@ -144,6 +145,7 @@ exports.withdraw = async (req, res) => {
       description: "Retrait d'argent",
       referenceExterne: Transaction.genererReference(),
 
+      statut: 'EN_ATTENTE',
     });
 
     const soldeAvant = wallet.solde;
@@ -152,7 +154,7 @@ exports.withdraw = async (req, res) => {
     await wallet.debiter(amount);
 
     // Marquer la transaction comme réussie
-    transaction.statut = 'reussie';
+    transaction.statut = 'SUCCES';
     transaction.soldeAvantSource = soldeAvant;
     transaction.soldeApresSource = wallet.solde;
     await transaction.save();
@@ -178,10 +180,13 @@ exports.withdraw = async (req, res) => {
 };
 
 // -----------------------------------------------------------
-//  Transfert vers un autre utilisateur
+//  Transfert vers un autre utilisateur (TRANSACTION ATOMIQUE)
 //  POST /api/transactions/transfer
 // -----------------------------------------------------------
 exports.transfer = async (req, res) => {
+  // Démarrer une session MongoDB pour la transaction atomique
+  const session = await mongoose.startSession();
+  
   try {
     const { telephoneDestinataire, montant, pin } = req.body;
     const amount = toAmount(montant);
@@ -245,32 +250,44 @@ exports.transfer = async (req, res) => {
       return res.status(400).json({ message: 'Solde insuffisant' });
     }
 
-    const transaction = await Transaction.create({
-      type: 'TRANSFER',
-      montant: amount,
-      devise: walletSource.devise,
-      walletSourceId: walletSource._id,
-      walletDestinationId: walletDest._id,
-      utilisateurSourceId: req.user.id,
-      utilisateurDestinationId: destinataire._id,
-      description: `Transfert vers ${destinataire.nomComplet}`,
-      referenceExterne: Transaction.genererReference(),
-      statut: 'en_attente',
-    });
+    // ============================================
+    // DÉBUT DE LA TRANSACTION ATOMIQUE
+    // ============================================
+    session.startTransaction();
 
     const soldeAvantSource = walletSource.solde;
     const soldeAvantDest = walletDest.solde;
+    const reference = Transaction.genererReference();
 
     try {
-      await walletSource.debiter(amount);
-      await walletDest.crediter(amount);
+      // Débiter le portefeuille source (avec session)
+      walletSource.solde -= amount;
+      await walletSource.save({ session });
 
-      transaction.statut = 'reussie';
-      transaction.soldeAvantSource = soldeAvantSource;
-      transaction.soldeApresSource = walletSource.solde;
-      transaction.soldeAvantDestination = soldeAvantDest;
-      transaction.soldeApresDestination = walletDest.solde;
-      await transaction.save();
+      // Créditer le portefeuille destination (avec session)
+      walletDest.solde += amount;
+      await walletDest.save({ session });
+
+      // Créer la transaction (avec session)
+      const [transaction] = await Transaction.create([{
+        type: 'TRANSFER',
+        montant: amount,
+        devise: walletSource.devise,
+        walletSourceId: walletSource._id,
+        walletDestinationId: walletDest._id,
+        utilisateurSourceId: req.user.id,
+        utilisateurDestinationId: destinataire._id,
+        description: `Transfert vers ${destinataire.nomComplet}`,
+        referenceExterne: reference,
+        statut: 'SUCCES',
+        soldeAvantSource: soldeAvantSource,
+        soldeApresSource: walletSource.solde,
+        soldeAvantDestination: soldeAvantDest,
+        soldeApresDestination: walletDest.solde,
+      }], { session });
+
+      // Valider la transaction atomique
+      await session.commitTransaction();
 
       return res.status(200).json({
         message: 'Transfert effectué avec succès',
@@ -285,25 +302,49 @@ exports.transfer = async (req, res) => {
         },
       });
     } catch (err) {
-      transaction.statut = 'echouee';
-      transaction.messageErreur = err.message;
-      await transaction.save();
+      // Annuler la transaction en cas d'erreur
+      await session.abortTransaction();
+      
+      // Enregistrer la transaction échouée (hors session)
+      await Transaction.create({
+        type: 'TRANSFER',
+        montant: amount,
+        devise: walletSource.devise,
+        walletSourceId: walletSource._id,
+        walletDestinationId: walletDest._id,
+        utilisateurSourceId: req.user.id,
+        utilisateurDestinationId: destinataire._id,
+        description: `Transfert vers ${destinataire.nomComplet}`,
+        referenceExterne: reference,
+        statut: 'ECHEC',
+        messageErreur: err.message,
+      });
+      
       throw err;
     }
+    // ============================================
+    // FIN DE LA TRANSACTION ATOMIQUE
+    // ============================================
   } catch (error) {
     console.error('Erreur lors du transfert:', error);
     return res.status(500).json({
       message: 'Erreur lors du transfert',
       error: error.message,
     });
+  } finally {
+    // Toujours fermer la session
+    session.endSession();
   }
 };
 
 // -----------------------------------------------------------
-//  Paiement marchand par code
+//  Paiement marchand par code (TRANSACTION ATOMIQUE)
 //  POST /api/transactions/merchant-payment
 // -----------------------------------------------------------
 exports.merchantPayment = async (req, res) => {
+  // Démarrer une session MongoDB pour la transaction atomique
+  const session = await mongoose.startSession();
+  
   try {
     const { codeMarchand, montant, pin } = req.body;
     const amount = toAmount(montant);
@@ -361,32 +402,45 @@ exports.merchantPayment = async (req, res) => {
       return res.status(400).json({ message: 'Solde insuffisant' });
     }
 
-    const transaction = await Transaction.create({
-      type: 'MERCHANT_PAYMENT',
-      montant: amount,
-      devise: walletClient.devise,
-      walletSourceId: walletClient._id,
-      walletDestinationId: walletMarchand._id,
-      utilisateurSourceId: req.user.id,
-      utilisateurDestinationId: marchand._id,
-      description: `Paiement à ${marchand.nomCommerce || marchand.nomComplet}`,
-      referenceExterne: Transaction.genererReference(),
-      statut: 'en_attente',
-    });
+    // ============================================
+    // DÉBUT DE LA TRANSACTION ATOMIQUE
+    // ============================================
+    session.startTransaction();
 
     const soldeAvantClient = walletClient.solde;
     const soldeAvantMarchand = walletMarchand.solde;
+    const reference = Transaction.genererReference();
+    const nomMarchand = marchand.nomCommerce || marchand.nomComplet;
 
     try {
-      await walletClient.debiter(amount);
-      await walletMarchand.crediter(amount);
+      // Débiter le portefeuille client (avec session)
+      walletClient.solde -= amount;
+      await walletClient.save({ session });
 
-      transaction.statut = 'reussie';
-      transaction.soldeAvantSource = soldeAvantClient;
-      transaction.soldeApresSource = walletClient.solde;
-      transaction.soldeAvantDestination = soldeAvantMarchand;
-      transaction.soldeApresDestination = walletMarchand.solde;
-      await transaction.save();
+      // Créditer le portefeuille marchand (avec session)
+      walletMarchand.solde += amount;
+      await walletMarchand.save({ session });
+
+      // Créer la transaction (avec session)
+      const [transaction] = await Transaction.create([{
+        type: 'MERCHANT_PAYMENT',
+        montant: amount,
+        devise: walletClient.devise,
+        walletSourceId: walletClient._id,
+        walletDestinationId: walletMarchand._id,
+        utilisateurSourceId: req.user.id,
+        utilisateurDestinationId: marchand._id,
+        description: `Paiement à ${nomMarchand}`,
+        referenceExterne: reference,
+        statut: 'SUCCES',
+        soldeAvantSource: soldeAvantClient,
+        soldeApresSource: walletClient.solde,
+        soldeAvantDestination: soldeAvantMarchand,
+        soldeApresDestination: walletMarchand.solde,
+      }], { session });
+
+      // Valider la transaction atomique
+      await session.commitTransaction();
 
       return res.status(200).json({
         message: 'Paiement marchand réussi',
@@ -395,22 +449,43 @@ exports.merchantPayment = async (req, res) => {
           id: transaction._id,
           type: transaction.type,
           montant: transaction.montant,
-          marchand: marchand.nomCommerce || marchand.nomComplet,
+          marchand: nomMarchand,
           reference: transaction.referenceExterne,
           date: transaction.createdAt,
         },
       });
     } catch (err) {
-      transaction.statut = 'echouee';
-      transaction.messageErreur = err.message;
-      await transaction.save();
+      // Annuler la transaction en cas d'erreur
+      await session.abortTransaction();
+      
+      // Enregistrer la transaction échouée (hors session)
+      await Transaction.create({
+        type: 'MERCHANT_PAYMENT',
+        montant: amount,
+        devise: walletClient.devise,
+        walletSourceId: walletClient._id,
+        walletDestinationId: walletMarchand._id,
+        utilisateurSourceId: req.user.id,
+        utilisateurDestinationId: marchand._id,
+        description: `Paiement à ${nomMarchand}`,
+        referenceExterne: reference,
+        statut: 'ECHEC',
+        messageErreur: err.message,
+      });
+      
       throw err;
     }
+    // ============================================
+    // FIN DE LA TRANSACTION ATOMIQUE
+    // ============================================
   } catch (error) {
     console.error('Erreur lors du paiement marchand:', error);
     return res.status(500).json({
       message: 'Erreur lors du paiement marchand',
       error: error.message,
     });
+  } finally {
+    // Toujours fermer la session
+    session.endSession();
   }
 };

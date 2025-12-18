@@ -4,13 +4,27 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Wallet = require('../models/Wallet');
+const { getEnv } = require('../config/env');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
+// Récupération sécurisée des variables d'environnement
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET invalide en production');
+    }
+    // Valeur par défaut UNIQUEMENT en développement
+    console.warn('⚠️  Utilisation d\'un JWT_SECRET par défaut - NE PAS UTILISER EN PRODUCTION');
+    return 'dev_secret_key_minimum_32_chars_long';
+  }
+  return secret;
+};
+
 const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
 
 // Générer un token JWT
 const generateToken = (id, role) => {
-  return jwt.sign({ id, role }, JWT_SECRET, {
+  return jwt.sign({ id, role }, getJwtSecret(), {
     expiresIn: JWT_EXPIRE
   });
 };
@@ -33,13 +47,25 @@ exports.register = async (req, res) => {
     }
 
     // 2) Vérifier si l'utilisateur existe déjà
+    const queryConditions = [{ telephone }];
+    // N'ajouter la condition email que si un email est fourni
+    if (email && email.trim()) {
+      queryConditions.push({ email: email.trim() });
+    }
+    
     const userExists = await User.findOne({
-      $or: [{ telephone }, { email }]
+      $or: queryConditions
     });
 
     if (userExists) {
+      // Message plus précis
+      if (userExists.telephone === telephone) {
+        return res.status(400).json({
+          message: 'Ce numéro de téléphone est déjà utilisé'
+        });
+      }
       return res.status(400).json({
-        message: 'Un utilisateur avec ce téléphone ou email existe déjà'
+        message: 'Cet email est déjà utilisé'
       });
     }
 
@@ -52,14 +78,20 @@ exports.register = async (req, res) => {
 
     // 4) Créer l'utilisateur
     // ⚠️ motDePasse en clair ici : le pre('save') dans le modèle s'occupe de le hasher
-    const user = await User.create({
+    const userData = {
       nomComplet,
       telephone,
-      email,
       motDePasse,
       role: finalRole,
       codeMarchand
-    });
+    };
+    
+    // N'ajouter l'email que s'il est fourni (pour l'index sparse)
+    if (email && email.trim()) {
+      userData.email = email.trim();
+    }
+    
+    const user = await User.create(userData);
 
     // 5) Créer le portefeuille associé
     await Wallet.create({

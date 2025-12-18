@@ -1,0 +1,60 @@
+<div class="history-container">
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Historique des transactions</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <div class="filters">
+                <mat-chip-listbox aria-label="Filtres de transaction">
+                    <mat-chip-option [selected]="filterType() === null" (click)="setFilter(null)">Tout</mat-chip-option>
+                    <mat-chip-option [selected]="filterType() === 'DEPOSIT'"
+                        (click)="setFilter('DEPOSIT')">Dépôts</mat-chip-option>
+                    <mat-chip-option [selected]="filterType() === 'WITHDRAW'"
+                        (click)="setFilter('WITHDRAW')">Retraits</mat-chip-option>
+                    <mat-chip-option [selected]="filterType() === 'TRANSFER'"
+                        (click)="setFilter('TRANSFER')">Transferts</mat-chip-option>
+                    <mat-chip-option [selected]="filterType() === 'MERCHANT_PAYMENT'"
+                        (click)="setFilter('MERCHANT_PAYMENT')">Paiements</mat-chip-option>
+                </mat-chip-listbox>
+            </div>
+
+            @if (loading()) {
+            <div class="loading-container">
+                <mat-spinner diameter="40"></mat-spinner>
+            </div>
+            } @else if (error()) {
+            <div class="error-container">
+                <mat-icon>error_outline</mat-icon>
+                <p>{{ error() }}</p>
+                <button mat-button color="primary" (click)="loadTransactions()">Réessayer</button>
+            </div>
+            } @else if (filteredTransactions.length === 0) {
+            <div class="empty-state">
+                <mat-icon>receipt_long</mat-icon>
+                <p>Aucune transaction trouvée</p>
+            </div>
+            } @else {
+            <mat-list>
+                @for (transaction of filteredTransactions; track transaction.id) {
+                <mat-list-item class="transaction-item">
+                    <div class="transaction-icon" [class]="getTransactionColor(transaction.type)">
+                        <mat-icon>{{ getTransactionIcon(transaction.type) }}</mat-icon>
+                    </div>
+                    <div class="transaction-details">
+                        <span class="transaction-type">{{ getTransactionLabel(transaction.type) }}</span>
+                        <span class="transaction-date">{{ transaction.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+                        @if (transaction.description) {
+                        <span class="transaction-desc">{{ transaction.description }}</span>
+                        }
+                    </div>
+                    <div class="transaction-amount" [class]="getTransactionColor(transaction.type)">
+                        {{ transaction.montant | currency:transaction.devise:'symbol':'1.0-0' }}
+                    </div>
+                </mat-list-item>
+                <mat-divider></mat-divider>
+                }
+            </mat-list>
+            }
+        </mat-card-content>
+    </mat-card>
+</div>

@@ -1,0 +1,227 @@
+<!-- frontend/src/app/features/admin/admin-dashboard/admin-dashboard.component.html -->
+<div class="admin-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1>
+        <mat-icon>admin_panel_settings</mat-icon>
+        Administration
+      </h1>
+      <p>Tableau de bord et gestion du système</p>
+    </div>
+    <button mat-icon-button (click)="refresh()" matTooltip="Actualiser">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Chargement des données...</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon>error</mat-icon>
+        <p>{{ error() }}</p>
+        <button mat-button color="primary" (click)="loadData()">Réessayer</button>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Content -->
+  @if (!loading() && !error()) {
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      @for (card of statsCards(); track card.title) {
+        <mat-card class="stat-card" [class]="card.color">
+          <mat-card-content>
+            <div class="stat-icon">
+              <mat-icon>{{ card.icon }}</mat-icon>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value">
+                @if (card.isCurrency) {
+                  {{ card.value | currency:'XOF':'symbol':'1.0-0' }}
+                } @else {
+                  {{ card.value | number }}
+                }
+              </span>
+              <span class="stat-title">{{ card.title }}</span>
+              <span class="stat-subtitle">{{ card.subtitle }}</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <a mat-raised-button color="primary" routerLink="/admin/users">
+        <mat-icon>people</mat-icon>
+        Gérer les utilisateurs
+      </a>
+      <a mat-raised-button color="accent" routerLink="/admin/transactions">
+        <mat-icon>receipt_long</mat-icon>
+        Voir les transactions
+      </a>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Nouvelles inscriptions -->
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>person_add</mat-icon>
+          <mat-card-title>Nouvelles inscriptions</mat-card-title>
+          <mat-card-subtitle>7 derniers jours</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (dashboard()?.nouvellesInscriptions?.length) {
+            <div class="user-list">
+              @for (user of dashboard()!.nouvellesInscriptions; track user._id) {
+                <div class="user-item">
+                  <div class="user-avatar">
+                    <mat-icon>person</mat-icon>
+                  </div>
+                  <div class="user-info">
+                    <span class="user-name">{{ user.nomComplet }}</span>
+                    <span class="user-phone">{{ user.telephone }}</span>
+                  </div>
+                  <mat-chip [class]="user.role">{{ user.role }}</mat-chip>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-message">Aucune nouvelle inscription</p>
+          }
+        </mat-card-content>
+        <mat-card-actions>
+          <a mat-button routerLink="/admin/users">Voir tous</a>
+        </mat-card-actions>
+      </mat-card>
+
+      <!-- Dernières transactions -->
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>receipt</mat-icon>
+          <mat-card-title>Dernières transactions</mat-card-title>
+          <mat-card-subtitle>Transactions réussies</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (dashboard()?.dernieresTransactions?.length) {
+            <div class="transaction-list">
+              @for (tx of dashboard()!.dernieresTransactions; track tx._id) {
+                <div class="transaction-item">
+                  <mat-icon [class]="tx.type">{{ getTransactionIcon(tx.type) }}</mat-icon>
+                  <div class="transaction-info">
+                    <span class="transaction-type">{{ tx.type }}</span>
+                    <span class="transaction-date">{{ tx.dateCreation | date:'short' }}</span>
+                  </div>
+                  <span class="transaction-amount">{{ tx.montant | currency:'XOF':'symbol':'1.0-0' }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-message">Aucune transaction</p>
+          }
+        </mat-card-content>
+        <mat-card-actions>
+          <a mat-button routerLink="/admin/transactions">Voir toutes</a>
+        </mat-card-actions>
+      </mat-card>
+
+      <!-- Transactions échouées -->
+      <mat-card class="dashboard-card alert-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="error">warning</mat-icon>
+          <mat-card-title>Alertes</mat-card-title>
+          <mat-card-subtitle>Transactions échouées récentes</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (dashboard()?.transactionsEchouees?.length) {
+            <div class="alert-list">
+              @for (tx of dashboard()!.transactionsEchouees; track tx._id) {
+                <div class="alert-item">
+                  <mat-icon class="error">error</mat-icon>
+                  <div class="alert-info">
+                    <span class="alert-type">{{ tx.type }} - {{ tx.montant | currency:'XOF':'symbol':'1.0-0' }}</span>
+                    <span class="alert-message">{{ tx.messageErreur || 'Erreur inconnue' }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-message success">
+              <mat-icon>check_circle</mat-icon>
+              Aucune alerte
+            </p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Utilisateurs bloqués -->
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="warn">block</mat-icon>
+          <mat-card-title>Utilisateurs bloqués</mat-card-title>
+          <mat-card-subtitle>Comptes désactivés</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (dashboard()?.utilisateursBloques?.length) {
+            <div class="user-list">
+              @for (user of dashboard()!.utilisateursBloques; track user._id) {
+                <div class="user-item blocked">
+                  <div class="user-avatar">
+                    <mat-icon>person_off</mat-icon>
+                  </div>
+                  <div class="user-info">
+                    <span class="user-name">{{ user.nomComplet }}</span>
+                    <span class="user-phone">{{ user.telephone }}</span>
+                  </div>
+                  <a mat-icon-button [routerLink]="['/admin/users', user._id]" matTooltip="Voir détails">
+                    <mat-icon>visibility</mat-icon>
+                  </a>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-message success">
+              <mat-icon>check_circle</mat-icon>
+              Aucun utilisateur bloqué
+            </p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Statistics Details -->
+    @if (statistics()) {
+      <mat-card class="stats-detail-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>analytics</mat-icon>
+          <mat-card-title>Répartition des transactions</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stats-detail-grid">
+            @for (stat of statistics()!.transactions.parType; track stat._id) {
+              <div class="stat-detail-item">
+                <mat-icon>{{ getTransactionIcon(stat._id) }}</mat-icon>
+                <div class="stat-detail-info">
+                  <span class="stat-detail-type">{{ stat._id }}</span>
+                  <span class="stat-detail-count">{{ stat.count }} transactions</span>
+                  <span class="stat-detail-volume">{{ stat.volumeTotal | currency:'XOF':'symbol':'1.0-0' }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+</div>
+

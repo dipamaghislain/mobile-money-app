@@ -3,6 +3,18 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+// Récupération sécurisée du JWT_SECRET
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET invalide en production');
+    }
+    return 'dev_secret_key_minimum_32_chars_long';
+  }
+  return secret;
+};
+
 // Protéger les routes (vérifier le token JWT)
 exports.protect = async (req, res, next) => {
   try {
@@ -21,7 +33,7 @@ exports.protect = async (req, res, next) => {
 
     try {
       // Vérifier le token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, getJwtSecret());
 
       // Récupérer l'utilisateur
       req.user = await User.findById(decoded.id).select('-motDePasse');

@@ -1,0 +1,72 @@
+<div class="transaction-container">
+    <mat-card class="deposit-card">
+        <mat-card-header class="card-header">
+            <div class="header-icon">
+                <mat-icon>account_balance_wallet</mat-icon>
+            </div>
+            <mat-card-title>Effectuer un dépôt</mat-card-title>
+            <mat-card-subtitle>Créditez votre portefeuille</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+            <div class="info-box">
+                <mat-icon class="info-icon">info</mat-icon>
+                <div class="info-content">
+                    <p class="info-title">Comment fonctionne le dépôt ?</p>
+                    <ul>
+                        <li>Le dépôt crédite directement <strong>votre propre compte</strong></li>
+                        <li><strong>Aucun numéro de bénéficiaire</strong> n'est requis</li>
+                        <li>Aucun code PIN n'est nécessaire pour cette opération</li>
+                        <li>Le montant minimum est de 100 XOF</li>
+                    </ul>
+                </div>
+            </div>
+
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="deposit-form">
+                @if (error()) {
+                <div class="error-message">
+                    <mat-icon>error</mat-icon>
+                    <span>{{ error() }}</span>
+                </div>
+                }
+
+                @if (success()) {
+                <div class="success-message">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>{{ success() }}</span>
+                </div>
+                }
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Montant à déposer</mat-label>
+                    <input matInput type="number" formControlName="amount" placeholder="Ex: 5000" min="100">
+                    <mat-icon matPrefix>attach_money</mat-icon>
+                    <span matTextSuffix>XOF</span>
+                    <mat-hint>Montant minimum : 100 XOF</mat-hint>
+                    <mat-error *ngIf="form.get('amount')?.hasError('required')">
+                        Le montant est requis
+                    </mat-error>
+                    <mat-error *ngIf="form.get('amount')?.hasError('min')">
+                        Le montant minimum est de 100 XOF
+                    </mat-error>
+                </mat-form-field>
+
+
+                <div class="actions">
+                    <button mat-button type="button" routerLink="/dashboard" class="cancel-btn">
+                        <mat-icon>arrow_back</mat-icon>
+                        <span>Annuler</span>
+                    </button>
+                    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loading()" class="submit-btn">
+                        @if (loading()) {
+                        <mat-spinner diameter="20"></mat-spinner>
+                        <span>En cours...</span>
+                        } @else {
+                        <mat-icon>check</mat-icon>
+                        <span>Valider le dépôt</span>
+                        }
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</div>

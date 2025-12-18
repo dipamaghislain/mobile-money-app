@@ -55,20 +55,14 @@ const walletSchema = new mongoose.Schema(
 
 walletSchema.index({ utilisateurId: 1 });
 
-walletSchema.pre('save', async function (next) {
-  try {
-    this.dateMiseAJour = Date.now();
-    
-    if (this.isModified('pin') && this.pin) {
-      if (!this.pin.startsWith('$2')) {
-        const salt = await bcrypt.genSalt(10);
-        this.pin = await bcrypt.hash(this.pin, salt);
-      }
+walletSchema.pre('save', async function () {
+  this.dateMiseAJour = Date.now();
+
+  if (this.isModified('pin') && this.pin) {
+    if (!this.pin.startsWith('$2')) {
+      const salt = await bcrypt.genSalt(10);
+      this.pin = await bcrypt.hash(this.pin, salt);
     }
-    
-    next();
-  } catch (error) {
-    next(error);
   }
 });
 
@@ -104,26 +98,26 @@ walletSchema.methods.estBloque = function () {
 walletSchema.methods.incrementerTentativesEchouees = async function () {
   this.tentativesPinEchouees += 1;
   const maxTentatives = parseInt(process.env.MAX_PIN_ATTEMPTS, 10) || 3;
-  
+
   if (this.tentativesPinEchouees >= maxTentatives) {
     this.dateBlocagePin = new Date();
   }
-  
+
   await this.save();
 };
 
 walletSchema.methods.reinitialiserTentatives = async function () {
   await this.constructor.updateOne(
     { _id: this._id },
-    { 
+    {
       $set: {
-        tentativesPinEchouees: 0, 
+        tentativesPinEchouees: 0,
         dateBlocagePin: null,
         dateMiseAJour: new Date()
       }
     }
   );
-  
+
   this.tentativesPinEchouees = 0;
   this.dateBlocagePin = null;
   this.dateMiseAJour = new Date();

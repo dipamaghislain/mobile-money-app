@@ -1,0 +1,54 @@
+<div class="pay-merchant-container">
+  <header class="pay-header">
+    <h1>
+      <mat-icon>payments</mat-icon>
+      Payer un commerçant
+    </h1>
+    <p class="subtitle">
+      Saisissez les informations du commerçant et le montant à régler.
+    </p>
+  </header>
+
+  <form [formGroup]="payForm" (ngSubmit)="onSubmit()" class="pay-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>ID ou code du commerçant</mat-label>
+      <input matInput formControlName="merchantId" />
+      <mat-icon matPrefix>storefront</mat-icon>
+      <mat-error *ngIf="f['merchantId'].hasError('required') && f['merchantId'].touched">
+        Le code commerçant est requis
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Montant</mat-label>
+      <input matInput type="number" formControlName="amount" />
+      <span matSuffix>XOF</span>
+      <mat-error *ngIf="f['amount'].hasError('required') && f['amount'].touched">
+        Le montant est requis
+      </mat-error>
+      <mat-error *ngIf="f['amount'].hasError('min') && f['amount'].touched">
+        Le montant doit être supérieur à 0
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description (optionnelle)</mat-label>
+      <textarea matInput rows="2" formControlName="description"></textarea>
+      <mat-icon matPrefix>description</mat-icon>
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" class="full-width submit-btn" type="submit" [disabled]="payForm.invalid || loading">
+      <ng-container *ngIf="!loading; else loadingTpl">
+        Confirmer le paiement
+      </ng-container>
+      <ng-template #loadingTpl>
+        <mat-spinner diameter="20"></mat-spinner>
+      </ng-template>
+    </button>
+  </form>
+
+  <div class="info-text">
+    <mat-icon>info</mat-icon>
+    <span>Vérifiez toujours le nom du commerçant avant de confirmer le paiement.</span>
+  </div>
+</div>
