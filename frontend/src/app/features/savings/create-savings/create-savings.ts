@@ -7,12 +7,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
 import { SavingsService } from '../../../core/services/savings.service';
 
 @Component({
   selector: 'app-create-savings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatSnackBarModule],
+  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatSnackBarModule, MatCardModule],
   templateUrl: './create-savings.html',
   styleUrl: './create-savings.scss',
 })
@@ -32,12 +33,24 @@ export class CreateSavings {
   });
 
   loading = false;
+  preview: any = null;
 
+  // Prévisualiser la tirelire avant création
   submit(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.snackBar.open('Veuillez corriger le formulaire', 'OK', { duration: 3000 });
+      return;
+    }
+    // Prepare preview object
+    this.preview = { ...this.form.value };
+    if (this.preview.objectifMontant === null || this.preview.objectifMontant === '') this.preview.objectifMontant = null;
+  }
+
+  // Confirmer et créer la tirelire
+  confirmCreate(): void {
+    if (!this.preview) return;
     this.loading = true;
-    const payload: any = { ...this.form.value };
-    // convert empty strings to undefined for optional fields
+    const payload: any = { ...this.preview };
     if (!payload.description) delete payload.description;
     if (!payload.icone) delete payload.icone;
     if (!payload.couleur) delete payload.couleur;
@@ -52,5 +65,9 @@ export class CreateSavings {
         this.loading = false;
       }
     });
+  }
+
+  cancelPreview(): void {
+    this.preview = null;
   }
 }

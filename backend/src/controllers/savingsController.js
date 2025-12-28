@@ -69,19 +69,39 @@ exports.getSavingById = async (req, res) => {
 // @access  Private
 exports.createSaving = async (req, res) => {
   try {
-    const { nom, description, objectifMontant, dateObjectif, icone, couleur } = req.body;
+    let { nom, description, objectifMontant, dateObjectif, icone, couleur } = req.body || {};
 
+    // Sanitisation & validations
+    nom = typeof nom === 'string' ? nom.trim() : '';
     if (!nom) {
-      return res.status(400).json({
-        message: 'Le nom de la tirelire est requis'
-      });
+      return res.status(400).json({ message: 'Le nom de la tirelire est requis' });
+    }
+    if (nom.length > 100) {
+      return res.status(400).json({ message: 'Le nom ne doit pas dépasser 100 caractères' });
     }
 
-    if (objectifMontant && objectifMontant < 0) {
-      return res.status(400).json({
-        message: 'L\'objectif doit être un montant positif'
-      });
+    if (objectifMontant !== undefined && objectifMontant !== null && objectifMontant !== '') {
+      const montantNum = Number(objectifMontant);
+      if (!Number.isFinite(montantNum) || montantNum < 0) {
+        return res.status(400).json({ message: 'L\'objectif doit être un montant positif valide' });
+      }
+      objectifMontant = montantNum;
+    } else {
+      objectifMontant = null;
     }
+
+    if (dateObjectif) {
+      const d = new Date(dateObjectif);
+      if (Number.isNaN(d.getTime())) {
+        return res.status(400).json({ message: 'La date objectif est invalide' });
+      }
+      dateObjectif = d;
+    } else {
+      dateObjectif = null;
+    }
+
+    if (icone && typeof icone === 'string' && icone.length > 50) icone = icone.slice(0, 50);
+    if (couleur && typeof couleur === 'string' && couleur.length > 20) couleur = couleur.slice(0, 20);
 
     const tirelire = await SavingsGoal.create({
       utilisateurId: req.user.id,
