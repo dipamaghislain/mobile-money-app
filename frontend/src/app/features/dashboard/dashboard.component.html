@@ -1,115 +1,222 @@
+// src/app/features/dashboard/dashboard.component.html
 <div class="dashboard-container">
-    <!-- Header -->
-    <header class="dashboard-header">
-        <div class="header-content">
-            <div class="user-info" style="cursor: pointer" routerLink="/profile">
-                <h1>{{ greeting() }}, {{ user()?.nomComplet || 'Utilisateur' }}</h1>
-                <p class="user-phone">{{ user()?.telephone }}</p>
-            </div>
-            <div class="header-actions">
-                <button mat-icon-button (click)="refresh()" aria-label="Actualiser">
-                    <mat-icon>refresh</mat-icon>
-                </button>
-                <button mat-icon-button (click)="logout()" aria-label="Déconnexion">
-                    <mat-icon>logout</mat-icon>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    @if (loading()) {
-    <div class="loading-container">
-        <mat-spinner diameter="50"></mat-spinner>
-        <p>Chargement...</p>
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="welcome-text">
+      <h1>Bonjour, {{ user()?.nomComplet }} 👋</h1>
+      <p class="account-number">Compte: {{ wallet()?.id }}</p>
     </div>
-    } @else if (error()) {
-    <div class="error-container">
-        <mat-icon>error_outline</mat-icon>
-        <p>{{ error() }}</p>
-        <button mat-raised-button color="primary" (click)="loadDashboardData()">
-            Réessayer
+    <div class="header-actions">
+      <button mat-icon-button>
+        <mat-icon>notifications</mat-icon>
+      </button>
+      <button mat-icon-button [matMenuTriggerFor]="menu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item routerLink="/profile">
+          <mat-icon>person</mat-icon>
+          <span>Mon profil</span>
         </button>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>exit_to_app</mat-icon>
+          <span>Déconnexion</span>
+        </button>
+      </mat-menu>
     </div>
-    } @else {
-    <!-- Carte Solde -->
-    <mat-card class="balance-card">
-        <mat-card-content>
-            <div class="balance-label">Solde disponible</div>
-            <div class="balance-amount">
-                {{ wallet()?.solde | number:'1.0-0' }} {{ wallet()?.devise }}
-            </div>
-            <div class="balance-status">
-                <mat-icon>verified</mat-icon>
-                Compte {{ wallet()?.statut }}
-            </div>
-        </mat-card-content>
-    </mat-card>
+  </div>
 
-    <!-- Actions rapides -->
-    <div class="quick-actions">
-        <h2>Actions rapides</h2>
-        <div class="actions-grid">
-            <button mat-raised-button class="action-btn deposit" (click)="openDepositModal()">
-                <mat-icon>add_circle</mat-icon>
-                <span>Dépôt</span>
-            </button>
-            <button mat-raised-button class="action-btn withdraw" (click)="openWithdrawModal()">
-                <mat-icon>remove_circle</mat-icon>
-                <span>Retrait</span>
-            </button>
-            <button mat-raised-button class="action-btn transfer" (click)="openTransferModal()">
-                <mat-icon>send</mat-icon>
-                <span>Transfert</span>
-            </button>
-            <button mat-raised-button class="action-btn payment" routerLink="/transactions/payment">
-                <mat-icon>store</mat-icon>
-                <span>Paiement</span>
-            </button>
-            <button mat-raised-button class="action-btn savings" routerLink="/savings">
-                <mat-icon>savings</mat-icon>
-                <span>Épargne</span>
-            </button>
-            <button mat-raised-button class="action-btn merchant" routerLink="/merchant">
-                <mat-icon>storefront</mat-icon>
-                <span>Commerçants</span>
-            </button>
+  <!-- Balance Card -->
+  <div class="balance-card">
+    <div class="balance-card-content">
+      <div class="balance-info">
+        <div class="balance-label">Solde disponible</div>
+        <div class="balance-amount">{{ wallet()?.solde | currencyXOF }}</div>
+        <div class="balance-subtitle">Dernière mise à jour: {{ now | date:'short' }}</div>
+      </div>
+      <div class="balance-actions">
+        <button mat-raised-button class="balance-action-btn" (click)="quickAction('recharge')">
+          <mat-icon>credit_card</mat-icon>
+          Recharger
+        </button>
+        <button mat-raised-button class="balance-action-btn" (click)="quickAction('history')">
+          <mat-icon>history</mat-icon>
+          Historique
+        </button>
+        <button mat-raised-button class="balance-action-btn" (click)="quickAction('export')">
+          <mat-icon>file_download</mat-icon>
+          Exporter
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <mat-card class="stat-card stat-income">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <mat-icon>arrow_downward</mat-icon>
         </div>
+        <div class="stat-details">
+          <div class="stat-label">Reçu ce mois</div>
+          <div class="stat-value">{{ monthlyIncome | currencyXOF }}</div>
+          <div class="stat-change positive">+12% vs mois dernier</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card stat-expense">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <mat-icon>arrow_upward</mat-icon>
+        </div>
+        <div class="stat-details">
+          <div class="stat-label">Dépensé ce mois</div>
+          <div class="stat-value">{{ monthlyExpense | currencyXOF }}</div>
+          <div class="stat-change negative">+5% vs mois dernier</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card stat-savings">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <mat-icon>savings</mat-icon>
+        </div>
+        <div class="stat-details">
+          <div class="stat-label">Épargne totale</div>
+          <div class="stat-value">{{ totalSavings | currencyXOF }}</div>
+          <div class="stat-change positive">Objectif: 80%</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card stat-transactions">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <mat-icon>receipt_long</mat-icon>
+        </div>
+        <div class="stat-details">
+          <div class="stat-label">Transactions</div>
+          <div class="stat-value">{{ transactionCount }}</div>
+          <div class="stat-change">Ce mois</div>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions-section">
+    <h2 class="section-title">Actions rapides</h2>
+    <div class="quick-actions-grid">
+      <mat-card class="action-card deposit-card" (click)="navigateTo('/transactions/deposit')">
+        <div class="action-icon-wrapper deposit-icon">
+          <mat-icon>add_circle</mat-icon>
+        </div>
+        <div class="action-content">
+          <h3 class="action-title">Dépôt</h3>
+          <p class="action-description">Alimentez votre compte</p>
+        </div>
+        <mat-icon class="action-arrow">arrow_forward</mat-icon>
+      </mat-card>
+
+      <mat-card class="action-card withdraw-card" (click)="navigateTo('/transactions/withdraw')">
+        <div class="action-icon-wrapper withdraw-icon">
+          <mat-icon>remove_circle</mat-icon>
+        </div>
+        <div class="action-content">
+          <h3 class="action-title">Retrait</h3>
+          <p class="action-description">Retirez de l'argent</p>
+        </div>
+        <mat-icon class="action-arrow">arrow_forward</mat-icon>
+      </mat-card>
+
+      <mat-card class="action-card transfer-card" (click)="navigateTo('/transactions/transfer')">
+        <div class="action-icon-wrapper transfer-icon">
+          <mat-icon>send</mat-icon>
+        </div>
+        <div class="action-content">
+          <h3 class="action-title">Transfert</h3>
+          <p class="action-description">Envoyez de l'argent</p>
+        </div>
+        <mat-icon class="action-arrow">arrow_forward</mat-icon>
+      </mat-card>
+
+      <mat-card class="action-card payment-card" (click)="navigateTo('/merchant/pay')">
+        <div class="action-icon-wrapper payment-icon">
+          <mat-icon>store</mat-icon>
+        </div>
+        <div class="action-content">
+          <h3 class="action-title">Paiement</h3>
+          <p class="action-description">Payez un marchand</p>
+        </div>
+        <mat-icon class="action-arrow">arrow_forward</mat-icon>
+      </mat-card>
+
+      <mat-card class="action-card savings-card" (click)="navigateTo('/savings')">
+        <div class="action-icon-wrapper savings-icon">
+          <mat-icon>account_balance_wallet</mat-icon>
+        </div>
+        <div class="action-content">
+          <h3 class="action-title">Épargne</h3>
+          <p class="action-description">Gérez votre épargne</p>
+        </div>
+        <mat-icon class="action-arrow">arrow_forward</mat-icon>
+      </mat-card>
+
+      <mat-card class="action-card merchant-card" (click)="navigateTo('/merchant')">
+        <div class="action-icon-wrapper merchant-icon">
+          <mat-icon>shopping_bag</mat-icon>
+        </div>
+        <div class="action-content">
+          <h3 class="action-title">Commerçants</h3>
+          <p class="action-description">Trouvez des marchands</p>
+        </div>
+        <mat-icon class="action-arrow">arrow_forward</mat-icon>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Recent Transactions -->
+  <div class="transactions-section">
+    <div class="section-header">
+      <h2 class="section-title">Transactions récentes</h2>
+      <a class="view-all-link" routerLink="/transactions/history">
+        Voir tout
+        <mat-icon>arrow_forward</mat-icon>
+      </a>
     </div>
 
-    <!-- Transactions récentes -->
-    <mat-card class="transactions-card">
-        <mat-card-header>
-            <mat-card-title>Transactions récentes</mat-card-title>
-            <button mat-button color="primary" routerLink="/transactions">
-                Voir tout
-            </button>
-        </mat-card-header>
-        <mat-card-content>
-            @if (transactions().length === 0) {
-            <div class="empty-transactions">
-                <mat-icon>receipt_long</mat-icon>
-                <p>Aucune transaction récente</p>
-            </div>
-            } @else {
-            <mat-list>
-                @for (transaction of transactions(); track transaction.id) {
-                <mat-list-item class="transaction-item">
-                    <div class="transaction-icon" [class]="getTransactionColor(transaction.type)">
-                        <mat-icon>{{ getTransactionIcon(transaction.type) }}</mat-icon>
-                    </div>
-                    <div class="transaction-details">
-                        <span class="transaction-type">{{ getTransactionLabel(transaction.type) }}</span>
-                        <span class="transaction-date">{{ transaction.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
-                    </div>
-                    <div class="transaction-amount" [class]="getTransactionColor(transaction.type)">
-                        {{ transaction.montant | currency:transaction.devise:'symbol':'1.0-0' }}
-                    </div>
-                </mat-list-item>
-                <mat-divider></mat-divider>
-                }
-            </mat-list>
-            }
-        </mat-card-content>
-    </mat-card>
-    }
+    <div *ngIf="recentTransactions.length > 0; else noTransactions">
+      <mat-card 
+        class="transaction-item" 
+        *ngFor="let transaction of recentTransactions"
+        (click)="viewTransaction(transaction)">
+        <div class="transaction-icon" [ngClass]="getTransactionIconClass(transaction.type)">
+          <mat-icon>{{ getTransactionIcon(transaction.type) }}</mat-icon>
+        </div>
+        <div class="transaction-details">
+          <div class="transaction-title">{{ getTransactionTitle(transaction) }}</div>
+          <div class="transaction-date">{{ transaction.dateCreation | date:'dd/MM/yyyy HH:mm' }}</div>
+          <div class="transaction-status" [ngClass]="'status-' + transaction.statut">
+            {{ getTransactionStatusLabel(transaction.statut) }}
+          </div>
+        </div>
+        <div class="transaction-amount" [ngClass]="getAmountClass(transaction.type)">
+          {{ getAmountSign(transaction.type) }}{{ transaction.montant | currencyXOF }}
+        </div>
+      </mat-card>
+    </div>
+
+    <ng-template #noTransactions>
+      <div class="empty-state">
+        <mat-icon class="empty-icon">receipt_long</mat-icon>
+        <p class="empty-text">Aucune transaction récente</p>
+        <button mat-raised-button color="primary" routerLink="/transactions/deposit">
+          Faire une transaction
+        </button>
+      </div>
+    </ng-template>
+  </div>
 </div>

@@ -1,0 +1,25 @@
+:host {
+	display: block;
+}
+
+.app-toolbar {
+	padding: 0 16px;
+	height: 64px;
+	border-bottom-left-radius: 8px;
+	border-bottom-right-radius: 8px;
+}
+
+.app-title {
+	font-weight: 600;
+	font-size: 1.125rem;
+	margin-left: 8px;
+}
+
+.spacer {
+	flex: 1 1 auto;
+}
+
+@media (max-width: 600px) {
+	.app-title { font-size: 1rem; }
+	.app-toolbar { height: 56px; }
+}

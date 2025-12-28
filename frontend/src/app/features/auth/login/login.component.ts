@@ -40,7 +40,7 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
-      telephone: ['', [Validators.required, Validators.pattern(/^[0-9]{8,15}$/)]],
+      email: ['', [Validators.required, Validators.email]],
       motDePasse: ['', [Validators.required, Validators.minLength(6)]]
     });
   }

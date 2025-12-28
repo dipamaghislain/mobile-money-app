@@ -1,0 +1,26 @@
+:root {
+	--container-max-width: 1200px;
+}
+
+.app-container {
+	min-height: calc(100vh - 128px);
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	padding: 24px 16px;
+}
+
+.container {
+	width: 100%;
+	max-width: var(--container-max-width);
+}
+
+.app-footer {
+	text-align: center;
+	padding: 20px 12px;
+	color: rgba(0,0,0,0.6);
+}
+
+@media (max-width: 768px) {
+	.app-container { padding: 16px 12px; }
+}

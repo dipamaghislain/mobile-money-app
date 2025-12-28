@@ -9,14 +9,14 @@ import { environment } from '../../../environments/environment';
 import { User } from '../models';
 
 export interface LoginRequest {
-  telephone: string;
+  email: string;
   motDePasse: string;
 }
 
 export interface RegisterRequest {
   nomComplet: string;
-  telephone: string;
-  email?: string;
+  telephone?: string;
+  email: string;
   motDePasse: string;
   role?: 'client' | 'marchand';
 }

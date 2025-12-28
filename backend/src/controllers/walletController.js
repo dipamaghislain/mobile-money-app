@@ -124,16 +124,16 @@ exports.verifyPin = async (req, res) => {
       });
     }
 
-    if (!wallet.pin) {
-      return res.status(400).json({
-        message: 'Aucun PIN n\'a été défini pour ce portefeuille'
+    // Vérifier si le portefeuille est bloqué (vérification prioritaire)
+    if (wallet.estBloque && wallet.estBloque()) {
+      return res.status(403).json({
+        message: 'Portefeuille bloqué temporairement. Réessayez plus tard.'
       });
     }
 
-    // Vérifier si le portefeuille est bloqué
-    if (wallet.estBloque()) {
-      return res.status(403).json({
-        message: 'Portefeuille bloqué temporairement. Réessayez plus tard.'
+    if (!wallet.pin) {
+      return res.status(400).json({
+        message: 'Aucun PIN n\'a été défini pour ce portefeuille'
       });
     }
 

@@ -12,16 +12,16 @@ const userSchema = new mongoose.Schema(
     },
     telephone: {
       type: String,
-      required: [true, 'Le numéro de téléphone est requis'],
+      required: false,
       unique: true,
+      sparse: true,
       trim: true,
       match: [/^[0-9]{8,15}$/, 'Numéro de téléphone invalide'],
     },
     email: {
       type: String,
-      required: false, // Email optionnel
+      required: [true, 'L\'email est requis'],
       unique: true,
-      sparse: true, // Permet plusieurs valeurs null/undefined avec unique
       lowercase: true,
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Email invalide'],

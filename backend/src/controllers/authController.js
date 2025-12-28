@@ -39,34 +39,27 @@ exports.register = async (req, res) => {
   try {
     const { nomComplet, telephone, email, motDePasse, role } = req.body;
 
-    // 1) Vérifications de base
-    if (!nomComplet || !telephone || !motDePasse) {
+    // 1) Vérifications de base — email requis maintenant
+    if (!nomComplet || !email || !motDePasse) {
       return res.status(400).json({
-        message: 'nomComplet, telephone et motDePasse sont obligatoires'
+        message: 'nomComplet, email et motDePasse sont obligatoires'
       });
     }
 
     // 2) Vérifier si l'utilisateur existe déjà
-    const queryConditions = [{ telephone }];
-    // N'ajouter la condition email que si un email est fourni
-    if (email && email.trim()) {
-      queryConditions.push({ email: email.trim() });
-    }
-    
+    // Rechercher par email prioritairement (identifiant principal)
     const userExists = await User.findOne({
-      $or: queryConditions
+      $or: [
+        { email: email.trim() },
+        ...(telephone && telephone.trim() ? [{ telephone }] : [])
+      ]
     });
 
     if (userExists) {
-      // Message plus précis
-      if (userExists.telephone === telephone) {
-        return res.status(400).json({
-          message: 'Ce numéro de téléphone est déjà utilisé'
-        });
+      if (userExists.email === email.trim()) {
+        return res.status(400).json({ message: 'Cet email existe déjà' });
       }
-      return res.status(400).json({
-        message: 'Cet email est déjà utilisé'
-      });
+      return res.status(400).json({ message: 'Ce numéro de téléphone existe déjà' });
     }
 
     // 3) Rôle + code marchand éventuel
@@ -80,16 +73,12 @@ exports.register = async (req, res) => {
     // ⚠️ motDePasse en clair ici : le pre('save') dans le modèle s'occupe de le hasher
     const userData = {
       nomComplet,
-      telephone,
+      telephone: telephone && telephone.trim() ? telephone.trim() : undefined,
+      email: email.trim(),
       motDePasse,
       role: finalRole,
       codeMarchand
     };
-    
-    // N'ajouter l'email que s'il est fourni (pour l'index sparse)
-    if (email && email.trim()) {
-      userData.email = email.trim();
-    }
     
     const user = await User.create(userData);
 
@@ -134,16 +123,17 @@ exports.register = async (req, res) => {
 // @access  Public
 exports.login = async (req, res) => {
   try {
-    const { telephone, motDePasse } = req.body;
+    // Connexion par email (ou fallback telephone si fourni)
+    const { email, telephone, motDePasse } = req.body;
 
-    if (!telephone || !motDePasse) {
+    if ((!email && !telephone) || !motDePasse) {
       return res.status(400).json({
-        message: 'Veuillez fournir un téléphone et un mot de passe'
+        message: 'Veuillez fournir un email (ou téléphone) et un mot de passe'
       });
     }
 
-    // Récupérer l'utilisateur AVEC le mot de passe (select: false dans le schema)
-    const user = await User.findOne({ telephone }).select('+motDePasse');
+    const findQuery = email ? { email: email.trim() } : { telephone };
+    const user = await User.findOne(findQuery).select('+motDePasse');
 
     if (!user) {
       return res.status(401).json({

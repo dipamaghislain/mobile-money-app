@@ -1,9 +1,10 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
@@ -18,11 +19,13 @@ import { WalletService, WalletResponse, TransactionHistoryItem } from '../../cor
 import { TransactionService } from '../../core/services/transaction.service';
 import { amountValidator } from '../../core/validators/amount.validator';
 import { 
+  TRANSACTION_TYPES,
   TransactionType,
   getTransactionLabel,
   getTransactionIcon,
   getTransactionColorClass
 } from '../../core/constants/transaction-types';
+import { CurrencyXOFPipe } from '../../shared/pipes/currency-xof.pipe';
 
 @Component({
   selector: 'app-dashboard',
@@ -32,6 +35,7 @@ import {
     MatCardModule,
     MatButtonModule,
     MatIconModule,
+    MatMenuModule,
     MatProgressSpinnerModule,
     MatListModule,
     MatDividerModule,
@@ -41,7 +45,8 @@ import {
     MatInputModule,
     ReactiveFormsModule,
     CurrencyPipe,
-    DatePipe
+    DatePipe,
+    CurrencyXOFPipe
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -53,12 +58,34 @@ export class DashboardComponent implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
   private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
 
   // Signals pour l'état
   wallet = signal<WalletResponse | null>(null);
   transactions = signal<TransactionHistoryItem[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
+
+  now = new Date();
+
+  // Statistiques simples basées sur les transactions récentes
+  get monthlyIncome(): number {
+    return this.transactions()
+      .filter(t => t.type === TRANSACTION_TYPES.DEPOSIT || t.type === TRANSACTION_TYPES.EPARGNE_OUT)
+      .reduce((sum, t) => sum + (t.montant || 0), 0);
+  }
+
+  get monthlyExpense(): number {
+    return this.transactions()
+      .filter(t => t.type === TRANSACTION_TYPES.WITHDRAW || t.type === TRANSACTION_TYPES.TRANSFER || t.type === TRANSACTION_TYPES.MERCHANT_PAYMENT || t.type === TRANSACTION_TYPES.EPARGNE_IN)
+      .reduce((sum, t) => sum + (t.montant || 0), 0);
+  }
+
+  get totalSavings(): number {
+    return this.transactions()
+      .filter(t => t.type === TRANSACTION_TYPES.EPARGNE_IN || t.type === TRANSACTION_TYPES.EPARGNE_OUT)
+      .reduce((sum, t) => sum + (t.montant || 0), 0);
+  }
 
   // Computed
   user = computed(() => this.authService.currentUserValue);
@@ -71,6 +98,15 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDashboardData();
+  }
+
+  // Exposés simplifiés pour le template
+  get transactionCount(): number {
+    return this.transactions().length;
+  }
+
+  get recentTransactions(): TransactionHistoryItem[] {
+    return this.transactions();
   }
 
   loadDashboardData(): void {
@@ -103,6 +139,27 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // Actions rapides sur la carte de solde
+  quickAction(action: 'recharge' | 'history' | 'export'): void {
+    switch (action) {
+      case 'recharge':
+        this.openDepositModal();
+        break;
+      case 'history':
+        this.router.navigateByUrl('/transactions/history');
+        break;
+      case 'export':
+        this.snackBar.open('Export des transactions non encore implémenté', 'OK', {
+          duration: 3000
+        });
+        break;
+    }
+  }
+
+  navigateTo(path: string): void {
+    this.router.navigateByUrl(path);
+  }
+
   /**
    * Retourne l'icône Material correspondant au type de transaction
    */
@@ -122,6 +179,82 @@ export class DashboardComponent implements OnInit {
    */
   getTransactionLabel(type: string): string {
     return getTransactionLabel(type as TransactionType);
+  }
+
+  getTransactionIconClass(type: string): string {
+    switch (type as TransactionType) {
+      case TRANSACTION_TYPES.DEPOSIT:
+        return 'deposit-icon';
+      case TRANSACTION_TYPES.WITHDRAW:
+        return 'withdraw-icon';
+      case TRANSACTION_TYPES.TRANSFER:
+        return 'transfer-icon';
+      case TRANSACTION_TYPES.MERCHANT_PAYMENT:
+        return 'payment-icon';
+      case TRANSACTION_TYPES.EPARGNE_IN:
+      case TRANSACTION_TYPES.EPARGNE_OUT:
+        return 'savings-icon';
+      default:
+        return 'deposit-icon';
+    }
+  }
+
+  getTransactionTitle(transaction: TransactionHistoryItem): string {
+    return this.getTransactionLabel(transaction.type);
+  }
+
+  getTransactionStatusLabel(status: string): string {
+    switch (status) {
+      case 'COMPLETED':
+        return 'Terminée';
+      case 'PENDING':
+        return 'En attente';
+      case 'PROCESSING':
+        return 'En cours';
+      case 'FAILED':
+        return 'Échouée';
+      case 'CANCELLED':
+        return 'Annulée';
+      default:
+        return status;
+    }
+  }
+
+  getAmountClass(type: string): string {
+    switch (type as TransactionType) {
+      case TRANSACTION_TYPES.DEPOSIT:
+      case TRANSACTION_TYPES.EPARGNE_OUT:
+        return 'positive';
+      case TRANSACTION_TYPES.WITHDRAW:
+      case TRANSACTION_TYPES.TRANSFER:
+      case TRANSACTION_TYPES.MERCHANT_PAYMENT:
+      case TRANSACTION_TYPES.EPARGNE_IN:
+        return 'negative';
+      default:
+        return '';
+    }
+  }
+
+  getAmountSign(type: string): string {
+    switch (type as TransactionType) {
+      case TRANSACTION_TYPES.DEPOSIT:
+      case TRANSACTION_TYPES.EPARGNE_OUT:
+        return '+';
+      case TRANSACTION_TYPES.WITHDRAW:
+      case TRANSACTION_TYPES.TRANSFER:
+      case TRANSACTION_TYPES.MERCHANT_PAYMENT:
+      case TRANSACTION_TYPES.EPARGNE_IN:
+        return '-';
+      default:
+        return '';
+    }
+  }
+
+  viewTransaction(transaction: TransactionHistoryItem): void {
+    // Pour l'instant on redirige simplement vers l'historique
+    this.router.navigate(['/transactions/history'], {
+      queryParams: { id: transaction.id }
+    });
   }
 
   logout(): void {
