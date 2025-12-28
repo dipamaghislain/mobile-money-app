@@ -3,7 +3,7 @@
   <!-- Header -->
   <div class="dashboard-header">
     <div class="welcome-text">
-      <h1>Bonjour, {{ user()?.nomComplet }} 👋</h1>
+      <h1>Bonjour, {{ user()?.nomComplet }} </h1>
       <p class="account-number">Compte: {{ wallet()?.id }}</p>
     </div>
     <div class="header-actions">
@@ -143,16 +143,7 @@
         <mat-icon class="action-arrow">arrow_forward</mat-icon>
       </mat-card>
 
-      <mat-card class="action-card payment-card" (click)="navigateTo('/merchant/pay')">
-        <div class="action-icon-wrapper payment-icon">
-          <mat-icon>store</mat-icon>
-        </div>
-        <div class="action-content">
-          <h3 class="action-title">Paiement</h3>
-          <p class="action-description">Payez un marchand</p>
-        </div>
-        <mat-icon class="action-arrow">arrow_forward</mat-icon>
-      </mat-card>
+      
 
       <mat-card class="action-card savings-card" (click)="navigateTo('/savings')">
         <div class="action-icon-wrapper savings-icon">
@@ -164,17 +155,7 @@
         </div>
         <mat-icon class="action-arrow">arrow_forward</mat-icon>
       </mat-card>
-
-      <mat-card class="action-card merchant-card" (click)="navigateTo('/merchant')">
-        <div class="action-icon-wrapper merchant-icon">
-          <mat-icon>shopping_bag</mat-icon>
-        </div>
-        <div class="action-content">
-          <h3 class="action-title">Commerçants</h3>
-          <p class="action-description">Trouvez des marchands</p>
-        </div>
-        <mat-icon class="action-arrow">arrow_forward</mat-icon>
-      </mat-card>
+      
     </div>
   </div>
 

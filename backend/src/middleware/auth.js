@@ -3,16 +3,16 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Récupération sécurisée du JWT_SECRET
+const { getEnv } = require('../config/env');
+
+// Récupération sécurisée du JWT_SECRET via le helper central
 const getJwtSecret = () => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret || secret.length < 32) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('JWT_SECRET invalide en production');
-    }
+  try {
+    return getEnv('JWT_SECRET', 'dev_secret_key_minimum_32_chars_long');
+  } catch (err) {
+    if (process.env.NODE_ENV === 'production') throw err;
     return 'dev_secret_key_minimum_32_chars_long';
   }
-  return secret;
 };
 
 // Protéger les routes (vérifier le token JWT)

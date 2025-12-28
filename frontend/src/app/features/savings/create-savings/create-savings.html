@@ -1,1 +1,36 @@
+<div class="create-savings-container">
+  <h2>Créer une tirelire</h2>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nom de la tirelire</mat-label>
+      <input matInput formControlName="nom" placeholder="Ex: Vacances 2026">
+      <mat-error *ngIf="form.get('nom')?.hasError('required')">Le nom est requis</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description (optionnel)</mat-label>
+      <input matInput formControlName="description" placeholder="Ex: Voyage en famille">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Objectif montant (XOF)</mat-label>
+      <input matInput type="number" formControlName="objectifMontant" placeholder="Ex: 100000">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Date objectif (optionnel)</mat-label>
+      <input matInput type="date" formControlName="dateObjectif">
+    </mat-form-field>
+
+    <div class="actions">
+      <button mat-button type="button" routerLink="/savings">Annuler</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+        <mat-icon *ngIf="!loading">check</mat-icon>
+        <mat-icon *ngIf="loading">hourglass_top</mat-icon>
+        <span>{{ loading ? 'Création...' : 'Créer' }}</span>
+      </button>
+    </div>
+  </form>
+</div>
 <p>create-savings works!</p>

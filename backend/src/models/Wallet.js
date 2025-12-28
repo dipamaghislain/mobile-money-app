@@ -53,7 +53,9 @@ const walletSchema = new mongoose.Schema(
   }
 );
 
-walletSchema.index({ utilisateurId: 1 });
+// `utilisateurId` a déjà `unique: true` dans la définition du champ
+// pour éviter la création d'index en double, on évite de redéclarer
+// walletSchema.index({ utilisateurId: 1 });
 
 walletSchema.pre('save', async function () {
   this.dateMiseAJour = Date.now();

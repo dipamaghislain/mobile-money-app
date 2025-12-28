@@ -75,8 +75,7 @@ const transactionSchema = new mongoose.Schema({
   },
   referenceExterne: {
     type: String,
-    trim: true,
-    sparse: true
+    trim: true
   },
   metadata: {
     type: mongoose.Schema.Types.Mixed,
@@ -96,7 +95,8 @@ transactionSchema.index({ utilisateurSourceId: 1, dateCreation: -1 });
 transactionSchema.index({ utilisateurDestinationId: 1, dateCreation: -1 });
 transactionSchema.index({ type: 1, dateCreation: -1 });
 transactionSchema.index({ statut: 1, dateCreation: -1 });
-transactionSchema.index({ referenceExterne: 1 });
+// Index sur referenceExterne (sparse car la référence est optionnelle)
+transactionSchema.index({ referenceExterne: 1 }, { sparse: true });
 
 transactionSchema.statics.genererReference = function() {
   const timestamp = Date.now().toString(36).toUpperCase();

@@ -6,18 +6,19 @@ const User = require('../models/User');
 const Wallet = require('../models/Wallet');
 const { getEnv } = require('../config/env');
 
-// Récupération sécurisée des variables d'environnement
+// Récupération sécurisée du JWT_SECRET via le helper config/env
 const getJwtSecret = () => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret || secret.length < 32) {
+  try {
+    // Utilise getEnv pour appliquer la validation centrale
+    return getEnv('JWT_SECRET', 'dev_secret_key_minimum_32_chars_long');
+  } catch (err) {
+    // En cas d'erreur, fallback en développement tout en loggant
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('JWT_SECRET invalide en production');
+      throw err;
     }
-    // Valeur par défaut UNIQUEMENT en développement
-    console.warn('⚠️  Utilisation d\'un JWT_SECRET par défaut - NE PAS UTILISER EN PRODUCTION');
+    console.warn('⚠️  JWT_SECRET manquant ou invalide — utilisation d\'un secret de développement');
     return 'dev_secret_key_minimum_32_chars_long';
   }
-  return secret;
 };
 
 const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';

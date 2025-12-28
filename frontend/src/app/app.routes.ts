@@ -24,11 +24,7 @@ export const routes: Routes = [
         loadChildren: () => import('./features/transactions/transactions.module').then(m => m.TransactionsModule),
         canActivate: [AuthGuard]
     },
-    {
-        path: 'merchant',
-        loadChildren: () => import('./features/merchant/merchant-module').then(m => m.MerchantModule),
-        canActivate: [AuthGuard]
-    },
+    
     {
         path: 'profile',
         loadChildren: () => import('./features/profile/profile-module').then(m => m.ProfileModule),

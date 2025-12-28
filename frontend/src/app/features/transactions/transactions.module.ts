@@ -4,7 +4,6 @@ import { RouterModule, Routes } from '@angular/router';
 import { DepositComponent } from './deposit/deposit';
 import { WithdrawComponent } from './withdraw/withdraw';
 import { TransferComponent } from './transfer/transfer';
-import { MerchantPaymentComponent } from './merchant-payment/merchant-payment';
 import { TransactionHistoryComponent } from './history/history';
 
 const routes: Routes = [
@@ -29,10 +28,7 @@ const routes: Routes = [
     path: 'transfer',
     component: TransferComponent
   },
-  {
-    path: 'payment',
-    component: MerchantPaymentComponent
-  }
+  
 ];
 
 @NgModule({
