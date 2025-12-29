@@ -24,7 +24,7 @@ export const routes: Routes = [
         loadChildren: () => import('./features/transactions/transactions.module').then(m => m.TransactionsModule),
         canActivate: [AuthGuard]
     },
-    
+
     {
         path: 'profile',
         loadChildren: () => import('./features/profile/profile-module').then(m => m.ProfileModule),
@@ -33,6 +33,11 @@ export const routes: Routes = [
     {
         path: 'savings',
         loadChildren: () => import('./features/savings/savings-module').then(m => m.SavingsModule),
+        canActivate: [AuthGuard]
+    },
+    {
+        path: 'settings',
+        loadChildren: () => import('./features/settings/settings.module').then(m => m.SettingsModule),
         canActivate: [AuthGuard]
     },
     {

@@ -19,7 +19,7 @@
                     </ul>
                 </div>
             </div>
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="transfer-form">
                 @if (error()) {
                 <div class="error-message">
                     <mat-icon>error</mat-icon>
@@ -33,8 +33,6 @@
                     <span>{{ success() }}</span>
                 </div>
                 }
-
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="transfer-form">
                 <mat-form-field appearance="outline" class="full-width">
                     <mat-label>Numéro de téléphone du destinataire</mat-label>
                     <input matInput type="tel" formControlName="telephoneDestinataire" placeholder="Ex: 0612345678">
@@ -64,7 +62,8 @@
 
                 <mat-form-field appearance="outline" class="full-width">
                     <mat-label>Code PIN de sécurité</mat-label>
-                    <input matInput type="password" formControlName="pin" placeholder="****" maxlength="4" autocomplete="off">
+                    <input matInput type="password" formControlName="pin" placeholder="****" maxlength="4"
+                        autocomplete="off">
                     <mat-icon matPrefix>lock</mat-icon>
                     <mat-hint>4 chiffres requis</mat-hint>
                     <mat-error *ngIf="form.get('pin')?.hasError('required')">
@@ -83,17 +82,19 @@
                         <mat-icon>arrow_back</mat-icon>
                         <span>Annuler</span>
                     </button>
-                    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loading()" class="submit-btn">
+                    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loading()"
+                        class="submit-btn">
                         @if (loading()) {
                         <mat-spinner diameter="20"></mat-spinner>
                         <span>En cours...</span>
                         } @else {
-                        <mat-icon>send</mat-icon>
-                        <span>Envoyer le transfert</span>
+                        <ng-container matButtonIcon>
+                            <mat-icon>send</mat-icon>
+                            <span>Envoyer le transfert</span>
+                        </ng-container>
                         }
                     </button>
                 </div>
-            </form>
             </form>
         </mat-card-content>
     </mat-card>

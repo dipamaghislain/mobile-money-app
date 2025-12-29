@@ -21,6 +21,12 @@ router.put('/me', protect, authController.updateProfile);
 // Changement de mot de passe
 router.put('/change-password', protect, authController.changePassword);
 
+// Mot de passe oublié (public)
+router.post('/forgot-password', authController.forgotPassword);
+
+// Réinitialisation de mot de passe (public)
+router.post('/reset-password', authController.resetPassword);
+
 // (Exemples de routes protégées par rôle, si tu veux plus tard)
 // router.get('/admin-only', protect, admin, ...);
 // router.get('/merchant-only', protect, merchant, ...);

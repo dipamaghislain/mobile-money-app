@@ -1,56 +1,53 @@
-﻿<div class="login-container">
-  <mat-card class="login-card">
+﻿<div class="auth-container">
+  <mat-card class="auth-card">
     <mat-card-header>
-      <mat-card-title>
-        <mat-icon class="title-icon">account_balance_wallet</mat-icon>
-        Mobile Money
-      </mat-card-title>
+      <mat-card-title>Bienvenue</mat-card-title>
       <mat-card-subtitle>Connectez-vous à votre compte</mat-card-subtitle>
     </mat-card-header>
-    
+
     <mat-card-content>
-      @if (errorMessage) {
-        <div class="error-message">
-          <mat-icon>error_outline</mat-icon>
-          {{ errorMessage }}
-        </div>
-      }
-      
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        @if (errorMessage) {
+        <div class="error-message">
+          <mat-icon>error</mat-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+        }
+
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Email</mat-label>
-          <input matInput type="email" formControlName="email" placeholder="jean@example.com">
-          <mat-icon matPrefix>email</mat-icon>
-          <mat-error *ngIf="f['email'].errors?.['required'] && f['email'].touched">L'email est requis</mat-error>
-          <mat-error *ngIf="f['email'].errors?.['email'] && f['email'].touched">Format d'email invalide</mat-error>
+          <input matInput type="email" formControlName="email" placeholder="Ex: jean@example.com">
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-error *ngIf="f['email'].errors?.['required']">L'email est requis</mat-error>
+          <mat-error *ngIf="f['email'].errors?.['email']">Email invalide</mat-error>
         </mat-form-field>
-        
+
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Mot de passe</mat-label>
           <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="motDePasse">
-          <mat-icon matPrefix>lock</mat-icon>
-          <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
+          <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
             <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
-          @if (f['motDePasse'].errors?.['required'] && f['motDePasse'].touched) {
-            <mat-error>Le mot de passe est requis</mat-error>
-          }
-          @if (f['motDePasse'].errors?.['minlength'] && f['motDePasse'].touched) {
-            <mat-error>Le mot de passe doit contenir au moins 6 caractères</mat-error>
-          }
+          <mat-error *ngIf="f['motDePasse'].errors?.['required']">Le mot de passe est requis</mat-error>
+          <mat-error *ngIf="f['motDePasse'].errors?.['minlength']">Minimum 6 caractères</mat-error>
         </mat-form-field>
-        
-        <button mat-raised-button color="primary" type="submit" class="full-width submit-btn" [disabled]="loading || loginForm.invalid">
+
+        <div class="forgot-password">
+          <a routerLink="/auth/forgot-password">Mot de passe oublié ?</a>
+        </div>
+
+        <button mat-raised-button color="primary" class="full-width submit-btn" type="submit"
+          [disabled]="loginForm.invalid || loading">
           @if (loading) {
-            <mat-spinner diameter="20"></mat-spinner>
+          <mat-spinner diameter="24"></mat-spinner>
           } @else {
-            Se connecter
+          <span>Se connecter</span>
           }
         </button>
       </form>
-      
-      <div class="register-link">
-        <p>Pas encore de compte ? <a routerLink="/auth/register">Créer un compte</a></p>
+
+      <div class="auth-footer">
+        <p>Pas encore de compte ? <a routerLink="/auth/register">S'inscrire</a></p>
       </div>
     </mat-card-content>
   </mat-card>

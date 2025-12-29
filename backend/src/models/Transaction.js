@@ -98,13 +98,13 @@ transactionSchema.index({ statut: 1, dateCreation: -1 });
 // Index sur referenceExterne (sparse car la référence est optionnelle)
 transactionSchema.index({ referenceExterne: 1 }, { sparse: true });
 
-transactionSchema.statics.genererReference = function() {
+transactionSchema.statics.genererReference = function () {
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).substring(2, 7).toUpperCase();
   return `TXN-${timestamp}-${random}`;
 };
 
-transactionSchema.methods.marquerReussie = async function(soldeAvantSource, soldeApresSource, soldeAvantDestination, soldeApresDestination) {
+transactionSchema.methods.marquerReussie = async function (soldeAvantSource, soldeApresSource, soldeAvantDestination, soldeApresDestination) {
   this.statut = 'SUCCES';
   this.soldeAvantSource = soldeAvantSource || 0;
   this.soldeApresSource = soldeApresSource || 0;
@@ -113,29 +113,29 @@ transactionSchema.methods.marquerReussie = async function(soldeAvantSource, sold
   await this.save();
 };
 
-transactionSchema.methods.marquerEchouee = async function(messageErreur) {
+transactionSchema.methods.marquerEchouee = async function (messageErreur) {
   this.statut = 'ECHEC';
   this.messageErreur = messageErreur;
   await this.save();
 };
 
-transactionSchema.methods.calculerFrais = function() {
+transactionSchema.methods.calculerFrais = function () {
   const pourcentageFrais = parseFloat(process.env.TRANSACTION_FEE_PERCENT) || 0;
-  
+
   if (pourcentageFrais > 0) {
     this.fraisTransaction = (this.montant * pourcentageFrais) / 100;
   } else {
     this.fraisTransaction = 0;
   }
-  
+
   return this.fraisTransaction;
 };
 
-transactionSchema.virtual('montantTotal').get(function() {
+transactionSchema.virtual('montantTotal').get(function () {
   return this.montant + this.fraisTransaction;
 });
 
-transactionSchema.methods.obtenirResume = function() {
+transactionSchema.methods.obtenirResume = function () {
   return {
     id: this._id,
     type: this.type,
@@ -149,7 +149,7 @@ transactionSchema.methods.obtenirResume = function() {
   };
 };
 
-transactionSchema.statics.obtenirParWallet = async function(walletId, options = {}) {
+transactionSchema.statics.obtenirParWallet = async function (walletId, options = {}) {
   const {
     type = null,
     startDate = null,
@@ -183,7 +183,7 @@ transactionSchema.statics.obtenirParWallet = async function(walletId, options = 
     .populate('utilisateurDestinationId', 'nomComplet telephone');
 };
 
-transactionSchema.statics.obtenirStatistiques = async function(walletId, periode = 30) {
+transactionSchema.statics.obtenirStatistiques = async function (walletId, periode = 30) {
   const dateDebut = new Date();
   dateDebut.setDate(dateDebut.getDate() - periode);
 

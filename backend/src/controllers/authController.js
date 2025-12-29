@@ -2,6 +2,7 @@
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
 const Wallet = require('../models/Wallet');
 const { getEnv } = require('../config/env');
@@ -38,58 +39,23 @@ const generateToken = (id, role) => {
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { nomComplet, telephone, email, motDePasse, role } = req.body;
+    const { nomComplet, telephone, phoneE164, email, motDePasse, password, role, pin, devise } = req.body;
 
-    // 1) Vérifications de base — email requis maintenant
-    if (!nomComplet || !email || !motDePasse) {
-      return res.status(400).json({
-        message: 'nomComplet, email et motDePasse sont obligatoires'
-      });
-    }
+    // ... (rest of code)
 
-    // 2) Vérifier si l'utilisateur existe déjà
-    // Rechercher par email prioritairement (identifiant principal)
-    const userExists = await User.findOne({
-      $or: [
-        { email: email.trim() },
-        ...(telephone && telephone.trim() ? [{ telephone }] : [])
-      ]
-    });
-
-    if (userExists) {
-      if (userExists.email === email.trim()) {
-        return res.status(400).json({ message: 'Cet email existe déjà' });
-      }
-      return res.status(400).json({ message: 'Ce numéro de téléphone existe déjà' });
-    }
-
-    // 3) Rôle + code marchand éventuel
-    const finalRole = role || 'client';
-    let codeMarchand;
-    if (finalRole === 'marchand') {
-      codeMarchand = 'M' + Date.now().toString().slice(-6);
-    }
-
-    // 4) Créer l'utilisateur
-    // ⚠️ motDePasse en clair ici : le pre('save') dans le modèle s'occupe de le hasher
-    const userData = {
-      nomComplet,
-      telephone: telephone && telephone.trim() ? telephone.trim() : undefined,
-      email: email.trim(),
-      motDePasse,
-      role: finalRole,
-      codeMarchand
-    };
-    
-    const user = await User.create(userData);
-
-    // 5) Créer le portefeuille associé
-    await Wallet.create({
+    const walletData = {
       utilisateurId: user._id,
       solde: 0,
-      devise: process.env.DEFAULT_CURRENCY || 'XOF',
+      devise: devise || process.env.DEFAULT_CURRENCY || 'XOF',
       statut: 'actif'
-    });
+    };
+
+    if (pin) {
+      // stocker le PIN brut ici : le pre('save') du modèle Wallet le hachera
+      walletData.pin = String(pin);
+    }
+
+    await Wallet.create(walletData);
 
     // 6) Générer le token
     const token = generateToken(user._id, user.role);
@@ -307,6 +273,148 @@ exports.changePassword = async (req, res) => {
     console.error('Erreur lors du changement de mot de passe:', error);
     return res.status(500).json({
       message: 'Erreur lors du changement de mot de passe',
+      error: error.message
+    });
+  }
+};
+
+// =========================
+//  MOT DE PASSE OUBLIÉ
+// =========================
+// @desc    Demander une réinitialisation de mot de passe
+// @route   POST /api/auth/forgot-password
+// @access  Public
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        message: 'Veuillez fournir votre adresse email'
+      });
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
+
+    // Pour la sécurité, on ne révèle pas si l'email existe ou non
+    if (!user) {
+      return res.status(200).json({
+        message: 'Si cet email existe, un lien de réinitialisation vous a été envoyé'
+      });
+    }
+
+    // Générer un token de réinitialisation
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    // Sauvegarder le token hashé et la date d'expiration (1 heure)
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 heure
+    await user.save({ validateBeforeSave: false });
+
+    // TODO: Envoyer l'email avec le lien de réinitialisation
+    // Pour l'instant, on retourne le token en développement
+    // En production, il faudra envoyer un email avec le lien
+    const resetUrl = process.env.FRONTEND_URL
+      ? `${process.env.FRONTEND_URL}/auth/reset-password?token=${resetToken}`
+      : `http://localhost:4200/auth/reset-password?token=${resetToken}`;
+
+    // En développement, on peut logger l'URL (à retirer en production)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔗 Lien de réinitialisation:', resetUrl);
+    }
+
+    // TODO: Implémenter l'envoi d'email
+    // await sendEmail({
+    //   to: user.email,
+    //   subject: 'Réinitialisation de votre mot de passe',
+    //   html: `Cliquez sur ce lien pour réinitialiser votre mot de passe: ${resetUrl}`
+    // });
+
+    return res.status(200).json({
+      message: 'Si cet email existe, un lien de réinitialisation vous a été envoyé',
+      // En développement seulement
+      ...(process.env.NODE_ENV === 'development' && { resetToken, resetUrl })
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la demande de réinitialisation:', error);
+
+    // Réinitialiser les champs en cas d'erreur
+    if (req.user) {
+      const user = await User.findById(req.user.id);
+      if (user) {
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save({ validateBeforeSave: false });
+      }
+    }
+
+    return res.status(500).json({
+      message: 'Erreur lors de la demande de réinitialisation',
+      error: error.message
+    });
+  }
+};
+
+// =========================
+//  RÉINITIALISATION MOT DE PASSE
+// =========================
+// @desc    Réinitialiser le mot de passe avec un token
+// @route   POST /api/auth/reset-password
+// @access  Public
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, nouveauMotDePasse } = req.body;
+
+    if (!token || !nouveauMotDePasse) {
+      return res.status(400).json({
+        message: 'Le token et le nouveau mot de passe sont requis'
+      });
+    }
+
+    // Valider la longueur du mot de passe
+    if (nouveauMotDePasse.length < 6) {
+      return res.status(400).json({
+        message: 'Le mot de passe doit contenir au moins 6 caractères'
+      });
+    }
+
+    // Hasher le token pour le comparer avec celui en base
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Trouver l'utilisateur avec le token valide et non expiré
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    }).select('+resetPasswordToken +resetPasswordExpires');
+
+    if (!user) {
+      return res.status(400).json({
+        message: 'Token invalide ou expiré'
+      });
+    }
+
+    // Mettre à jour le mot de passe
+    user.motDePasse = nouveauMotDePasse;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    return res.status(200).json({
+      message: 'Mot de passe réinitialisé avec succès'
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la réinitialisation du mot de passe:', error);
+    return res.status(500).json({
+      message: 'Erreur lors de la réinitialisation du mot de passe',
       error: error.message
     });
   }

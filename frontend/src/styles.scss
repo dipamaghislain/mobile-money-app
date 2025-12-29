@@ -21,7 +21,7 @@ $custom-primary: (
     400: white,
     500: white,
     600: white,
-    700: white,
+    700: white,a
     800: white,
     900: white,
   )
@@ -285,11 +285,36 @@ mat-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.95) !important;
-  
+  // Allow overlays (select panels, datepickers, etc.) to overflow cards
+  // so dropdowns are not clipped when cards are scrollable.
+  overflow: visible !important;
+  position: relative;
   &:hover {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
     transform: translateY(-2px);
   }
+}
+
+// Ensure CDK overlay is above other UI and panels can't be hidden by stacking contexts
+.cdk-overlay-container {
+  position: fixed !important;
+  z-index: 10000 !important;
+  pointer-events: none;
+}
+
+.cdk-overlay-pane {
+  z-index: 10050 !important;
+  pointer-events: auto;
+}
+
+// Specific Material panels
+.mat-select-panel {
+  z-index: 10100 !important;
+}
+
+// Datepicker / autocomplete overlays
+.mat-datepicker-content, .mat-autocomplete-panel {
+  z-index: 10100 !important;
 }
 
 // Toolbar

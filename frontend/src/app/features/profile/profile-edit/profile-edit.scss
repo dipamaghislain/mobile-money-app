@@ -1,0 +1,100 @@
+.profile-edit-container {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 24px;
+  border-radius: 16px;
+
+  /* look "pro" */
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  /* meilleure lisibilité */
+  box-sizing: border-box;
+  padding: 0 !important;
+  /* Reset padding for full width header */
+  overflow: hidden;
+}
+
+.profile-card-header {
+  background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+  padding: 24px !important;
+  margin-bottom: 24px;
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: white;
+
+    .header-icon {
+      background: rgba(255, 255, 255, 0.2);
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+  }
+}
+
+.profile-form {
+  padding: 0 24px 24px;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* Si tu veux regrouper des champs sur une même ligne */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+
+  /* séparation visuelle */
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Mobile: tout en colonne + boutons plein largeur si besoin */
+@media (max-width: 600px) {
+  .profile-edit-container {
+    margin: 16px;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    justify-content: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}

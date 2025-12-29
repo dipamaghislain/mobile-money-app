@@ -19,6 +19,7 @@ export interface RegisterRequest {
   email: string;
   motDePasse: string;
   role?: 'client' | 'marchand';
+  pin?: string;
 }
 
 export interface AuthResponse {
@@ -128,6 +129,47 @@ export class AuthService {
     }
 
     this.currentUserSubject.next(user);
+  }
+
+  changePassword(ancienMotDePasse: string, nouveauMotDePasse: string): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.API_URL}/change-password`, {
+      ancienMotDePasse,
+      nouveauMotDePasse
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  updateProfile(payload: { nomComplet?: string; email?: string; adresse?: string; nomCommerce?: string }): Observable<{ message: string; user: User }> {
+    return this.http.put<{ message: string; user: User }>(`${this.API_URL}/me`, payload).pipe(
+      tap(res => {
+        if (res.user) {
+          this.currentUserSubject.next(res.user);
+          if (isPlatformBrowser(this.platformId)) {
+            localStorage.setItem(environment.userKey, JSON.stringify(res.user));
+          }
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  forgotPassword(email: string): Observable<{ message: string; resetToken?: string; resetUrl?: string }> {
+    return this.http.post<{ message: string; resetToken?: string; resetUrl?: string }>(
+      `${this.API_URL}/forgot-password`,
+      { email }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  resetPassword(token: string, nouveauMotDePasse: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.API_URL}/reset-password`, {
+      token,
+      nouveauMotDePasse
+    }).pipe(
+      catchError(this.handleError)
+    );
   }
 
   private handleError(error: any): Observable<never> {

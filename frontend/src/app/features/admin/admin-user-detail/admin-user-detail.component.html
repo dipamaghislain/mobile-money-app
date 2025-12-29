@@ -105,8 +105,10 @@
               @if (updating()) {
                 <mat-spinner diameter="20"></mat-spinner>
               } @else {
-                <mat-icon>{{ userDetail()!.user.statut === 'actif' ? 'block' : 'check_circle' }}</mat-icon>
-                {{ userDetail()!.user.statut === 'actif' ? 'Bloquer' : 'Débloquer' }}
+                <ng-container matButtonIcon>
+                  <mat-icon>{{ userDetail()!.user.statut === 'actif' ? 'block' : 'check_circle' }}</mat-icon>
+                  {{ userDetail()!.user.statut === 'actif' ? 'Bloquer' : 'Débloquer' }}
+                </ng-container>
               }
             </button>
           </mat-card-actions>

@@ -1,13 +1,14 @@
 ﻿.login-container {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 3vw, 24px);
+  background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  /* Allow scrolling if keyboard opens or screen is tiny */
 
+  /* Background animation can stay but ensuring it doesn't block interaction */
   &::before {
     content: '';
     position: absolute;
@@ -15,8 +16,10 @@
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
     animation: rotate 20s linear infinite;
+    pointer-events: none;
+    z-index: 0;
   }
 }
 
@@ -24,45 +27,42 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
 }
 
 .login-card {
-  width: 100%;
-  max-width: 420px;
-  padding: 40px;
-  border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: min(440px, 100%);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.98) !important;
   position: relative;
   z-index: 1;
-  animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideUp 0.5s ease-out;
+  display: flex;
+  flex-direction: column;
 }
 
 mat-card-header {
+  padding: 32px 24px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 24px;
-  
+  text-align: center;
+
   mat-card-title {
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
-    color: #667eea;
-    
-    .title-icon {
-      font-size: 36px;
-      width: 36px;
-      height: 36px;
-    }
+    color: #ff9500;
   }
-  
+
   mat-card-subtitle {
     margin-top: 8px;
     font-size: 14px;
@@ -70,17 +70,21 @@ mat-card-header {
   }
 }
 
+mat-card-content {
+  padding: 0 32px 32px;
+}
+
 .error-message {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: #ffebee;
   color: #c62828;
-  padding: 12px 16px;
+  padding: 12px 14px;
   border-radius: 8px;
   margin-bottom: 20px;
-  font-size: 14px;
-  
+  font-size: 13px;
+
   mat-icon {
     font-size: 20px;
     width: 20px;
@@ -93,45 +97,91 @@ mat-card-header {
   margin-bottom: 16px;
 }
 
+.forgot-password {
+  text-align: right;
+  margin-bottom: 20px;
+  margin-top: -8px;
+
+  a {
+    color: #ff9500;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
 .submit-btn {
-  height: 52px;
+  height: 48px;
   font-size: 16px;
   font-weight: 600;
-  margin-top: 8px;
   border-radius: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  
+  box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+  transition: all 0.2s;
+
   &:hover:not([disabled]) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 16px rgba(255, 149, 0, 0.4);
   }
-  
-  &:active:not([disabled]) {
-    transform: translateY(0);
-  }
-  
+
   mat-spinner {
     margin: 0 auto;
   }
 }
 
-.register-link {
+.auth-footer {
   text-align: center;
   margin-top: 24px;
-  
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+
   p {
     color: #666;
     font-size: 14px;
-    
+    margin: 0;
+
     a {
-      color: #667eea;
+      color: #ff9500;
       text-decoration: none;
-      font-weight: 600;
-      
+      font-weight: 700;
+
       &:hover {
         text-decoration: underline;
       }
     }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+  .login-card {
+    border-radius: 16px;
+  }
+
+  mat-card-header {
+    padding: 24px 20px 12px;
+  }
+
+  mat-card-content {
+    padding: 0 20px 24px;
+  }
+
+  mat-card-title {
+    font-size: 22px;
   }
 }

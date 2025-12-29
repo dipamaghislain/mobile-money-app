@@ -17,6 +17,7 @@ export interface TransactionHistoryItem {
     devise: string;
     statut: string;
     description?: string;
+    referenceExterne?: string;
     dateCreation: Date;
 }
 

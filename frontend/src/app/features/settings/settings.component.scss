@@ -1,0 +1,210 @@
+// Settings Component Styles - Mobile-First Design
+// Orange gradient theme matching the reference mockup
+
+.settings-container {
+    min-height: 100vh;
+    background: #f5f5f5;
+    padding-bottom: 80px;
+}
+
+// ============================================
+// HEADER
+// ============================================
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+    color: white;
+
+    .back-btn {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 8px;
+        margin: -8px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        mat-icon {
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
+        }
+    }
+
+    h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+    }
+}
+
+// ============================================
+// CONTENT
+// ============================================
+.settings-content {
+    padding: 16px 20px;
+}
+
+.settings-section {
+    margin-bottom: 24px;
+}
+
+.section-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 12px 4px;
+}
+
+.settings-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.settings-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: #fafafa;
+    }
+}
+
+.item-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(255, 149, 0, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+        color: #ff9500;
+    }
+}
+
+.item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.item-label {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
+.item-value {
+    font-size: 14px;
+    color: #8e8e93;
+}
+
+.chevron {
+    color: #c7c7cc;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+}
+
+// ============================================
+// TOGGLE CUSTOMIZATION
+// ============================================
+::ng-deep .mat-mdc-slide-toggle {
+    --mdc-switch-selected-track-color: #ff9500;
+    --mdc-switch-selected-handle-color: white;
+    --mdc-switch-selected-hover-track-color: #ff9500;
+    --mdc-switch-selected-focus-track-color: #ff9500;
+    --mdc-switch-selected-pressed-track-color: #ff9500;
+}
+
+// ============================================
+// BOTTOM NAVIGATION
+// ============================================
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0 12px;
+    box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.08);
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+    z-index: 100;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: #8e8e93;
+    font-size: 11px;
+    font-weight: 500;
+    transition: color 0.2s;
+
+    mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+    }
+
+    &.active {
+        color: #ff9500;
+    }
+
+    &:hover:not(.active) {
+        color: #666;
+    }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (min-width: 768px) {
+    .settings-container {
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .bottom-nav {
+        max-width: 480px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 20px 20px 0 0;
+    }
+}

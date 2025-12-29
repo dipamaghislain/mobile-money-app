@@ -1,103 +1,142 @@
 <div class="profile-container">
-    <div class="profile-header">
-        <h1>
-            <mat-icon>account_circle</mat-icon>
-            Mon Profil
-        </h1>
+
+    <!-- HEADER HERO -->
+    <div class="gradient-hero">
+        <div class="header-nav">
+            <button class="back-btn" (click)="goBack()">
+                <mat-icon>arrow_back</mat-icon>
+            </button>
+            <h1>Mon Profil</h1>
+        </div>
+
+        <div class="profile-summary">
+            <div class="avatar-container">
+                <div class="avatar">
+                    <span>{{ initials() }}</span>
+                </div>
+            </div>
+            <h2>{{ user()?.nomComplet }}</h2>
+            <span class="phone-number">{{ user()?.telephone }}</span>
+        </div>
     </div>
 
-    <div class="profile-content">
-        <!-- Informations personnelles -->
-        <mat-card class="profile-card">
-            <mat-card-header>
-                <mat-card-title>
-                    <mat-icon>person</mat-icon>
-                    Informations personnelles
-                </mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-                <div class="info-row">
-                    <span class="info-label">Nom complet</span>
-                    <span class="info-value">{{ user()?.nomComplet || 'Non renseigné' }}</span>
-                </div>
-                <mat-divider></mat-divider>
-                <div class="info-row">
-                    <span class="info-label">Téléphone</span>
-                    <span class="info-value">{{ user()?.telephone || 'Non renseigné' }}</span>
-                </div>
-                @if (user()?.email) {
-                <mat-divider></mat-divider>
-                <div class="info-row">
-                    <span class="info-label">Email</span>
-                    <span class="info-value">{{ user()?.email }}</span>
-                </div>
-                }
-            </mat-card-content>
-            <mat-card-actions>
-                <button mat-button color="primary" routerLink="/profile/edit">
-                    <mat-icon>edit</mat-icon>
-                    <span>Modifier</span>
-                </button>
-            </mat-card-actions>
-        </mat-card>
+    <!-- CONTENT -->
+    <div class="content-wrapper">
 
-        <!-- Sécurité -->
-        <mat-card class="profile-card">
-            <mat-card-header>
-                <mat-card-title>
-                    <mat-icon>security</mat-icon>
-                    Sécurité
-                </mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-                <div class="security-section">
-                    <div class="security-item">
-                        <div class="security-info">
-                            <mat-icon>lock</mat-icon>
-                            <div>
-                                <h3>Code PIN</h3>
-                                <p>Protège vos transactions financières (retrait, transfert, paiement)</p>
-                                @if (hasPin() === null) {
-                                <span class="status-text">Vérification...</span>
-                                } @else if (hasPin()) {
-                                <span class="status-text success">PIN défini</span>
-                                } @else {
-                                <span class="status-text warning">PIN non défini</span>
-                                }
-                            </div>
-                        </div>
-                        <button mat-raised-button color="primary" (click)="openPinModal()">
-                            <mat-icon>{{ hasPin() ? 'edit' : 'add' }}</mat-icon>
-                            <span>{{ hasPin() ? 'Modifier le PIN' : 'Définir le PIN' }}</span>
-                        </button>
+        <!-- INFO PERSONNELLES -->
+        <mat-card class="info-card">
+            <div class="card-header-row">
+                <h3>Informations personnelles</h3>
+                <button mat-icon-button color="primary" routerLink="/profile/edit">
+                    <mat-icon>edit</mat-icon>
+                </button>
+            </div>
+            <div class="info-list">
+                <div class="info-item">
+                    <div class="icon-box">
+                        <mat-icon>phone</mat-icon>
+                    </div>
+                    <div class="info-text">
+                        <span class="label">Téléphone</span>
+                        <span class="value">{{ user()?.telephone }}</span>
                     </div>
                 </div>
-            </mat-card-content>
-        </mat-card>
 
-        <!-- Informations du compte -->
-        <mat-card class="profile-card">
-            <mat-card-header>
-                <mat-card-title>
-                    <mat-icon>account_balance_wallet</mat-icon>
-                    Compte
-                </mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-                <div class="info-row">
-                    <span class="info-label">Statut</span>
-                    <span class="info-value">
-                        <mat-chip color="primary">Actif</mat-chip>
-                    </span>
-                </div>
-                @if (user()?.role) {
-                <mat-divider></mat-divider>
-                <div class="info-row">
-                    <span class="info-label">Rôle</span>
-                    <span class="info-value">{{ user()?.role }}</span>
+                @if (user()?.email) {
+                <div class="info-item">
+                    <div class="icon-box">
+                        <mat-icon>mail</mat-icon>
+                    </div>
+                    <div class="info-text">
+                        <span class="label">Email</span>
+                        <span class="value">{{ user()?.email }}</span>
+                    </div>
                 </div>
                 }
-            </mat-card-content>
+
+                <div class="info-item">
+                    <div class="icon-box">
+                        <mat-icon>calendar_today</mat-icon>
+                    </div>
+                    <div class="info-text">
+                        <span class="label">Membre depuis</span>
+                        <span class="value">{{ user()?.dateCreation | date:'MMMM yyyy':'':'fr' }}</span>
+                    </div>
+                </div>
+            </div>
         </mat-card>
+
+        <!-- STATS GRID -->
+        <div class="stats-grid">
+            <mat-card class="stat-card">
+                <div class="stat-label">Solde compte</div>
+                <div class="stat-value">{{ balance() | number }} XOF</div>
+            </mat-card>
+            <mat-card class="stat-card">
+                <div class="stat-label">Épargne</div>
+                <div class="stat-value success">{{ savings() | number }} XOF</div>
+            </mat-card>
+        </div>
+
+        <!-- MENU NAVIGATION -->
+        <mat-card class="menu-card">
+            <button class="menu-item" matRipple routerLink="/settings">
+                <div class="icon-box">
+                    <mat-icon>shield</mat-icon>
+                </div>
+                <span>Sécurité</span>
+                <mat-icon class="chevron">chevron_right</mat-icon>
+            </button>
+
+            <mat-divider></mat-divider>
+
+            <button class="menu-item" matRipple (click)="tempAction('Notifications')">
+                <div class="icon-box">
+                    <mat-icon>notifications</mat-icon>
+                </div>
+                <span>Notifications</span>
+                <mat-icon class="chevron">chevron_right</mat-icon>
+            </button>
+
+            <mat-divider></mat-divider>
+
+            <button class="menu-item" matRipple (click)="tempAction('Aide')">
+                <div class="icon-box">
+                    <mat-icon>help</mat-icon>
+                </div>
+                <span>Aide & Support</span>
+                <mat-icon class="chevron">chevron_right</mat-icon>
+            </button>
+
+            <mat-divider></mat-divider>
+
+            <button class="menu-item logout" matRipple (click)="logout()">
+                <div class="icon-box">
+                    <mat-icon>logout</mat-icon>
+                </div>
+                <span>Déconnexion</span>
+            </button>
+        </mat-card>
+
     </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+        <a class="nav-item" routerLink="/dashboard">
+            <mat-icon>home</mat-icon>
+            <span>Accueil</span>
+        </a>
+        <a class="nav-item" routerLink="/transactions/history">
+            <mat-icon>history</mat-icon>
+            <span>Historique</span>
+        </a>
+        <a class="nav-item active" routerLink="/profile">
+            <mat-icon>person</mat-icon>
+            <span>Profil</span>
+        </a>
+        <a class="nav-item" routerLink="/settings">
+            <mat-icon>settings</mat-icon>
+            <span>Paramètres</span>
+        </a>
+    </nav>
 </div>

@@ -1,1 +1,63 @@
-<p>profile-edit works!</p>
+<div class="profile-edit-container">
+  <mat-card class="profile-card" appearance="outlined">
+    <mat-card-header class="profile-card-header">
+      <div class="header-title">
+        <mat-icon class="header-icon">edit</mat-icon>
+        <div>
+          <div class="title">Modifier mon profil</div>
+          <div class="subtitle">Mets à jour tes informations personnelles</div>
+        </div>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form class="profile-form" [formGroup]="form" (ngSubmit)="onSubmit()" autocomplete="on">
+        <div class="form-grid">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Nom complet</mat-label>
+            <input matInput formControlName="nomComplet" autocomplete="name" />
+            <mat-error *ngIf="showError('nomComplet','required')">Nom requis</mat-error>
+            <mat-error *ngIf="showError('nomComplet','minlength')">Minimum 2 caractères</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" autocomplete="email" />
+            <mat-error *ngIf="showError('email','required')">Email requis</mat-error>
+            <mat-error *ngIf="showError('email','email')">Email invalide</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width form-span-2">
+            <mat-label>Adresse</mat-label>
+            <input matInput formControlName="adresse" autocomplete="street-address" />
+          </mat-form-field>
+
+          <mat-form-field
+            *ngIf="isMerchant"
+            appearance="outline"
+            class="full-width form-span-2"
+          >
+            <mat-label>Nom du commerce</mat-label>
+            <input matInput formControlName="nomCommerce" autocomplete="organization" />
+          </mat-form-field>
+        </div>
+
+        <div class="actions">
+          <button mat-button type="button" routerLink="/profile" [disabled]="submitting">
+            Annuler
+          </button>
+
+          <button
+            mat-flat-button
+            color="primary"
+            type="submit"
+            [disabled]="form.invalid || submitting"
+          >
+            <mat-icon *ngIf="!submitting">check</mat-icon>
+            <span>{{ submitting ? 'Enregistrement...' : 'Enregistrer' }}</span>
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -56,13 +56,16 @@
                         <mat-icon>arrow_back</mat-icon>
                         <span>Annuler</span>
                     </button>
-                    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loading()" class="submit-btn">
+                    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loading()"
+                        class="submit-btn">
                         @if (loading()) {
                         <mat-spinner diameter="20"></mat-spinner>
                         <span>En cours...</span>
                         } @else {
-                        <mat-icon>check</mat-icon>
-                        <span>Valider le dépôt</span>
+                        <ng-container matButtonIcon>
+                            <mat-icon>check</mat-icon>
+                            <span>Valider le dépôt</span>
+                        </ng-container>
                         }
                     </button>
                 </div>

@@ -1,101 +1,223 @@
 .register-container {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 20px;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 3vw, 28px);
+  background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
 }
 
 .register-card {
-    width: 100%;
-    max-width: 450px;
-    padding: 32px;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-height: 90vh;
-    overflow-y: auto;
+  width: min(480px, 100%);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  max-height: min(92vh, 780px);
 }
 
 mat-card-header {
-    display: flex;
-    flex-direction: column;
+  padding: 22px 22px 10px;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+
+  mat-card-title {
+    display: inline-flex;
     align-items: center;
-    margin-bottom: 24px;
+    gap: 10px;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: #ff9500;
 
-    mat-card-title {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-size: 24px;
-        font-weight: 700;
-        color: #667eea;
-
-        .title-icon {
-            font-size: 32px;
-            width: 32px;
-            height: 32px;
-        }
+    .title-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
     }
+  }
 
-    mat-card-subtitle {
-        margin-top: 8px;
-        font-size: 14px;
-        color: #666;
-    }
+  mat-card-subtitle {
+    margin-top: 8px;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.card-content {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.form-scroll {
+  padding: 18px 22px 18px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
 }
 
 .error-message {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #ffebee;
-    color: #c62828;
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(198, 40, 40, 0.1);
+  border: 1px solid rgba(198, 40, 40, 0.2);
+  color: #c62828;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  font-size: 13px;
 
-    mat-icon {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
-    }
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .full-width {
-    width: 100%;
-    margin-bottom: 12px;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+/* Pays + téléphone */
+.phone-row {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.country-select,
+.phone-input {
+  width: 100%;
+}
+
+.dial-prefix {
+  color: rgba(0, 0, 0, 0.72);
+  font-weight: 700;
+}
+
+/* Prénom + Nom */
+.name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.name-field {
+  width: 100%;
+}
+
+/* Bloc PIN */
+.pin-box {
+  margin-top: 10px;
+  margin-bottom: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 149, 0, 0.08);
+  border: 1px solid rgba(255, 149, 0, 0.2);
+  display: grid;
+  gap: 12px;
+}
+
+.pin-info {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+
+  mat-icon {
+    color: #ff9500;
+    margin-top: 2px;
+  }
+
+  .muted {
+    margin-top: 4px;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 12px;
+  }
+}
+
+.pin-field {
+  width: 100%;
 }
 
 .submit-btn {
-    height: 48px;
-    font-size: 16px;
-    font-weight: 600;
-    margin-top: 8px;
-    border-radius: 8px;
+  height: 48px;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 12px;
+  margin-top: 8px;
 
-    mat-spinner {
-        margin: 0 auto;
-    }
+  mat-spinner {
+    margin: 0 auto;
+  }
 }
 
+/* Lien bas */
 .login-link {
-    text-align: center;
-    margin-top: 20px;
+  padding: 14px 22px 18px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  text-align: center;
 
-    p {
-        color: #666;
-        font-size: 14px;
+  p {
+    margin: 0;
+    color: rgba(0, 0, 0, 0.62);
+    font-size: 13px;
 
-        a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-
-            &:hover {
-                text-decoration: underline;
-            }
-        }
+    a {
+      color: #ff9500;
+      text-decoration: none;
+      font-weight: 800;
     }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .register-container {
+    place-items: start center;
+  }
+
+  .register-card {
+    max-height: 94vh;
+  }
+
+  mat-card-header {
+    padding: 18px 16px 10px;
+  }
+
+  .form-scroll {
+    padding: 16px;
+  }
+
+  .login-link {
+    padding: 12px 16px 16px;
+  }
+
+  .phone-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ✅ Fix important : panel du mat-select opaque (plus de transparence) */
+:host ::ng-deep .country-panel.mat-mdc-select-panel {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  max-height: 280px;
+  overflow: auto;
 }

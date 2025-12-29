@@ -1,11 +1,13 @@
 .transaction-container {
     padding: 24px;
-    max-width: 600px;
+    max-width: 500px;
     margin: 0 auto;
-    min-height: calc(100vh - 64px);
+    min-height: calc(100vh - 80px);
     display: flex;
     align-items: center;
     justify-content: center;
+    padding-bottom: 100px;
+    background-color: #f5f7fa;
 
     @media (max-width: 768px) {
         padding: 16px;
@@ -28,7 +30,7 @@
 .card-header {
     text-align: center;
     padding: 32px 24px 16px;
-    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+    background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
     color: white;
 
     .header-icon {
@@ -247,6 +249,7 @@
         transform: translateY(-20px);
         opacity: 0;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;
@@ -257,6 +260,7 @@
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }

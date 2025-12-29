@@ -19,7 +19,9 @@ const walletSchema = new mongoose.Schema(
     devise: {
       type: String,
       default: 'XOF',
-      enum: ['XOF', 'EUR', 'USD'],
+      uppercase: true,
+      minlength: 3,
+      maxlength: 3,
     },
     pin: {
       type: String,

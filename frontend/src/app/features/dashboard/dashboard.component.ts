@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,7 +18,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { WalletService, WalletResponse, TransactionHistoryItem } from '../../core/services/wallet.service';
 import { TransactionService } from '../../core/services/transaction.service';
 import { amountValidator } from '../../core/validators/amount.validator';
-import { 
+import {
   TRANSACTION_TYPES,
   TransactionType,
   getTransactionLabel,
@@ -44,7 +44,6 @@ import { CurrencyXOFPipe } from '../../shared/pipes/currency-xof.pipe';
     MatFormFieldModule,
     MatInputModule,
     ReactiveFormsModule,
-    CurrencyPipe,
     DatePipe,
     CurrencyXOFPipe
   ],
@@ -65,6 +64,7 @@ export class DashboardComponent implements OnInit {
   transactions = signal<TransactionHistoryItem[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
+  showBalance = signal(true);
 
   now = new Date();
 
@@ -149,15 +149,60 @@ export class DashboardComponent implements OnInit {
         this.router.navigateByUrl('/transactions/history');
         break;
       case 'export':
-        this.snackBar.open('Export des transactions non encore implémenté', 'OK', {
-          duration: 3000
-        });
+        this.exportTransactions();
         break;
+    }
+  }
+
+  private exportTransactions(): void {
+    const transactions = this.transactions();
+    if (transactions.length === 0) {
+      this.snackBar.open('Aucune transaction à exporter', 'OK', { duration: 3000 });
+      return;
+    }
+
+    // Créer le contenu CSV
+    const headers = ['Date', 'Type', 'Montant', 'Devise', 'Statut', 'Description', 'Référence'];
+    const rows = transactions.map(t => [
+      new Date(t.dateCreation).toLocaleString(),
+      this.getTransactionLabel(t.type),
+      t.montant,
+      t.devise,
+      this.getTransactionStatusLabel(t.statut),
+      t.description || '',
+      t.referenceExterne || ''
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    // Créer le blob et le lien de téléchargement
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `transactions_export_${new Date().toISOString().slice(0, 10)}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      this.snackBar.open('Export téléchargé avec succès', 'OK', { duration: 3000 });
     }
   }
 
   navigateTo(path: string): void {
     this.router.navigateByUrl(path);
+  }
+
+  toggleBalanceVisibility(): void {
+    this.showBalance.update(v => !v);
+  }
+
+  openScanner(): void {
+    this.snackBar.open('Scanner QR code - Fonctionnalité à venir', 'OK', { duration: 3000 });
   }
 
   /**
@@ -391,8 +436,10 @@ export class DashboardComponent implements OnInit {
               <mat-spinner diameter="20"></mat-spinner>
               <span>En cours...</span>
               } @else {
-              <mat-icon>check</mat-icon>
-              <span>Valider</span>
+              <ng-container matButtonIcon>
+                <mat-icon>check</mat-icon>
+                <span>Valider</span>
+              </ng-container>
               }
             </button>
           </div>
@@ -595,8 +642,10 @@ class DepositModalComponent {
               <mat-spinner diameter="20"></mat-spinner>
               <span>En cours...</span>
               } @else {
-              <mat-icon>account_balance</mat-icon>
-              <span>Valider</span>
+              <ng-container matButtonIcon>
+                <mat-icon>account_balance</mat-icon>
+                <span>Valider</span>
+              </ng-container>
               }
             </button>
           </div>
@@ -813,8 +862,10 @@ class WithdrawModalComponent {
               <mat-spinner diameter="20"></mat-spinner>
               <span>En cours...</span>
               } @else {
-              <mat-icon>send</mat-icon>
-              <span>Envoyer</span>
+              <ng-container matButtonIcon>
+                <mat-icon>send</mat-icon>
+                <span>Envoyer</span>
+              </ng-container>
               }
             </button>
           </div>
