@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TransactionService } from '../../../core/services/transaction.service';
+import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom-nav';
 
 @Component({
   selector: 'app-merchant-payment',
@@ -21,7 +22,8 @@ import { TransactionService } from '../../../core/services/transaction.service';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    BottomNavComponent
   ],
   templateUrl: './merchant-payment.html',
   styleUrl: './merchant-payment.scss'

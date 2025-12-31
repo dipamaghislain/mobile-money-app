@@ -1,16 +1,26 @@
-// Modèle utilisateur adapté au backend
+// Modèle utilisateur adapté au backend multi-pays
 export interface User {
   id: string;
+  email: string;
   nomComplet: string;
   telephone: string;
-  email?: string;
+  pays: string;
+  devise: string;
   role: UserRole;
   statut: UserStatus;
   codeMarchand?: string;
   nomCommerce?: string;
   adresse?: string;
+  kycLevel?: number;
+  pinConfigured: boolean;
   wallet?: Wallet;
-  dateCreation: Date;
+  dateCreation?: Date;
+  paysConfig?: {
+    nom: string;
+    symbole: string;
+    indicatif: string;
+    limites: any;
+  };
 }
 
 export enum UserRole {

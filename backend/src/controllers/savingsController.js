@@ -69,22 +69,6 @@ exports.getSavingById = async (req, res) => {
 // @access  Private
 exports.createSaving = async (req, res) => {
   try {
-    console.log('Creating Saving Goal. Body:', req.body);
-    console.log('User:', req.user);
-
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ message: 'Utilisateur non authentifié ou ID manquant' });
-    }
-
-    // CHECK IF SAVING ALREADY EXISTS (SINGLETON MODE)
-    const existingSaving = await SavingsGoal.findOne({ utilisateurId: req.user.id });
-    if (existingSaving) {
-      return res.status(200).json({
-        message: 'Tirelire existante récupérée',
-        tirelire: existingSaving.obtenirResume()
-      });
-    }
-
     let { nom, description, objectifMontant, dateObjectif, icone, couleur } = req.body || {};
 
     // Sanitisation & validations
@@ -96,7 +80,6 @@ exports.createSaving = async (req, res) => {
       return res.status(400).json({ message: 'Le nom ne doit pas dépasser 100 caractères' });
     }
 
-    // Handle objectifMontant
     if (objectifMontant !== undefined && objectifMontant !== null && objectifMontant !== '') {
       const montantNum = Number(objectifMontant);
       if (!Number.isFinite(montantNum) || montantNum < 0) {
@@ -107,8 +90,7 @@ exports.createSaving = async (req, res) => {
       objectifMontant = null;
     }
 
-    // Handle dateObjectif
-    if (dateObjectif && dateObjectif !== '' && dateObjectif !== null) {
+    if (dateObjectif) {
       const d = new Date(dateObjectif);
       if (Number.isNaN(d.getTime())) {
         return res.status(400).json({ message: 'La date objectif est invalide' });
@@ -121,19 +103,15 @@ exports.createSaving = async (req, res) => {
     if (icone && typeof icone === 'string' && icone.length > 50) icone = icone.slice(0, 50);
     if (couleur && typeof couleur === 'string' && couleur.length > 20) couleur = couleur.slice(0, 20);
 
-    const savingData = {
+    const tirelire = await SavingsGoal.create({
       utilisateurId: req.user.id,
       nom,
       description,
-      objectifMontant: objectifMontant, // Explicitly pass checked value
-      dateObjectif: dateObjectif,       // Explicitly pass checked value
+      objectifMontant: objectifMontant || null,
+      dateObjectif: dateObjectif || null,
       icone: icone || 'piggy-bank',
       couleur: couleur || '#4CAF50'
-    };
-
-    console.log('Saving Data to Create:', savingData);
-
-    const tirelire = await SavingsGoal.create(savingData);
+    });
 
     res.status(201).json({
       message: 'Tirelire créée avec succès',
@@ -142,10 +120,6 @@ exports.createSaving = async (req, res) => {
 
   } catch (error) {
     console.error('Erreur lors de la création de la tirelire:', error);
-    // Log more details if it's a Mongoose Validation Error
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({ message: 'Erreur de validation', error: error.message });
-    }
     res.status(500).json({
       message: 'Erreur lors de la création de la tirelire',
       error: error.message
@@ -271,6 +245,7 @@ exports.depositToSaving = async (req, res) => {
       type: 'EPARGNE_IN',
       montant,
       devise: wallet.devise,
+      paysSource: req.user.pays,
       walletSourceId: wallet._id,
       utilisateurSourceId: req.user.id,
       description: `Versement dans ${tirelire.nom}`,
@@ -394,6 +369,7 @@ exports.withdrawFromSaving = async (req, res) => {
       type: 'EPARGNE_OUT',
       montant,
       devise: wallet.devise,
+      paysSource: req.user.pays,
       walletDestinationId: wallet._id,
       utilisateurDestinationId: req.user.id,
       description: `Retrait depuis ${tirelire.nom}`,

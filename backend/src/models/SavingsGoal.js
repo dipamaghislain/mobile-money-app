@@ -71,9 +71,8 @@ const savingsGoalSchema = new mongoose.Schema({
 savingsGoalSchema.index({ utilisateurId: 1, dateCreation: -1 });
 savingsGoalSchema.index({ statut: 1 });
 
-savingsGoalSchema.pre('save', function(next) {
+savingsGoalSchema.pre('save', function() {
   this.dateMiseAJour = Date.now();
-  next();
 });
 
 savingsGoalSchema.virtual('pourcentageProgression').get(function() {

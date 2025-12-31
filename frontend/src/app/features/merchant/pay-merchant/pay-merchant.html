@@ -1,54 +1,120 @@
 <div class="pay-merchant-container">
-  <header class="pay-header">
-    <h1>
-      <mat-icon>payments</mat-icon>
-      Payer un commerçant
-    </h1>
-    <p class="subtitle">
-      Saisissez les informations du commerçant et le montant à régler.
-    </p>
-  </header>
+  <mat-card class="pay-card">
+    <!-- Header avec gradient orange -->
+    <mat-card-header class="card-header">
+      <div class="header-icon">
+        <mat-icon>storefront</mat-icon>
+      </div>
+      <mat-card-title>Paiement Marchand</mat-card-title>
+      <mat-card-subtitle>Payez rapidement vos achats chez un commerçant</mat-card-subtitle>
+    </mat-card-header>
 
-  <form [formGroup]="payForm" (ngSubmit)="onSubmit()" class="pay-form">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>ID ou code du commerçant</mat-label>
-      <input matInput formControlName="merchantId" />
-      <mat-icon matPrefix>storefront</mat-icon>
-      <mat-error *ngIf="f['merchantId'].hasError('required') && f['merchantId'].touched">
-        Le code commerçant est requis
-      </mat-error>
-    </mat-form-field>
+    <mat-card-content>
+      <!-- Info box -->
+      <div class="info-box">
+        <mat-icon class="info-icon">info</mat-icon>
+        <div class="info-content">
+          <p class="info-title">Paiement sécurisé</p>
+          <p class="info-text">Vérifiez le nom du commerçant avant de confirmer votre paiement.</p>
+        </div>
+      </div>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Montant</mat-label>
-      <input matInput type="number" formControlName="amount" />
-      <span matSuffix>XOF</span>
-      <mat-error *ngIf="f['amount'].hasError('required') && f['amount'].touched">
-        Le montant est requis
-      </mat-error>
-      <mat-error *ngIf="f['amount'].hasError('min') && f['amount'].touched">
-        Le montant doit être supérieur à 0
-      </mat-error>
-    </mat-form-field>
+      <form [formGroup]="payForm" (ngSubmit)="onSubmit()" class="pay-form">
+        <!-- Code Marchand -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>store</mat-icon>
+            Commerçant
+          </h3>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Description (optionnelle)</mat-label>
-      <textarea matInput rows="2" formControlName="description"></textarea>
-      <mat-icon matPrefix>description</mat-icon>
-    </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Code Marchand</mat-label>
+            <input matInput formControlName="merchantId" placeholder="Ex: SHOP001" />
+            <mat-icon matPrefix>qr_code_scanner</mat-icon>
+            <mat-error *ngIf="f['merchantId'].hasError('required') && f['merchantId'].touched">
+              Le code commerçant est requis
+            </mat-error>
+          </mat-form-field>
+        </div>
 
-    <button mat-raised-button color="primary" class="full-width submit-btn" type="submit" [disabled]="payForm.invalid || loading">
-      <ng-container *ngIf="!loading; else loadingTpl">
-        Confirmer le paiement
-      </ng-container>
-      <ng-template #loadingTpl>
-        <mat-spinner diameter="20"></mat-spinner>
-      </ng-template>
-    </button>
-  </form>
+        <!-- Montant -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>payments</mat-icon>
+            Montant
+          </h3>
 
-  <div class="info-text">
-    <mat-icon>info</mat-icon>
-    <span>Vérifiez toujours le nom du commerçant avant de confirmer le paiement.</span>
-  </div>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Montant à payer</mat-label>
+            <input matInput type="number" formControlName="amount" placeholder="Ex: 5000" min="1" />
+            <mat-icon matPrefix>attach_money</mat-icon>
+            <span matTextSuffix>FCFA</span>
+            <mat-hint>Minimum: 1 FCFA</mat-hint>
+            <mat-error *ngIf="f['amount'].hasError('required') && f['amount'].touched">
+              Le montant est requis
+            </mat-error>
+            <mat-error *ngIf="f['amount'].hasError('min') && f['amount'].touched">
+              Le montant doit être supérieur à 0
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Code PIN -->
+        <div class="form-section pin-section">
+          <h3 class="section-title">
+            <mat-icon>lock</mat-icon>
+            Sécurité
+          </h3>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Code PIN</mat-label>
+            <input 
+              matInput 
+              type="password" 
+              formControlName="pin"
+              maxlength="4"
+              inputmode="numeric"
+              placeholder="****"
+            />
+            <mat-icon matPrefix>lock</mat-icon>
+            <mat-hint>Votre code PIN à 4 chiffres</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <!-- Description optionnelle -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description (optionnel)</mat-label>
+          <input matInput formControlName="description" placeholder="Ex: Achat de produits..." />
+          <mat-icon matPrefix>notes</mat-icon>
+        </mat-form-field>
+
+        <!-- Actions -->
+        <div class="actions">
+          <button mat-button type="button" class="cancel-btn" routerLink="/dashboard">
+            <mat-icon>arrow_back</mat-icon>
+            Annuler
+          </button>
+          <button 
+            mat-raised-button 
+            color="primary" 
+            class="submit-btn" 
+            type="submit" 
+            [disabled]="payForm.invalid || loading"
+          >
+            <ng-container *ngIf="!loading; else loadingTpl">
+              <mat-icon>payment</mat-icon>
+              Payer maintenant
+            </ng-container>
+            <ng-template #loadingTpl>
+              <mat-spinner diameter="20"></mat-spinner>
+              <span>Traitement...</span>
+            </ng-template>
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Bottom Navigation -->
+  <app-bottom-nav></app-bottom-nav>
 </div>

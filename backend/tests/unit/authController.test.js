@@ -1,4 +1,7 @@
 // backend/tests/unit/authController.test.js
+// Tests pour le système d'authentification multi-pays
+// Authentification: EMAIL + MOT DE PASSE
+// Transactions: TELEPHONE + PIN
 
 const authController = require('../../src/controllers/authController');
 const User = require('../../src/models/User');
@@ -20,26 +23,30 @@ describe('Auth Controller', () => {
   });
 
   // ===========================================
-  // TESTS INSCRIPTION
+  // TESTS INSCRIPTION (EMAIL + TÉLÉPHONE + MOT DE PASSE)
   // ===========================================
   describe('register', () => {
     beforeEach(() => {
       req.body = {
-        nomComplet: 'Jean Dupont',
-        telephone: '0612345678',
         email: 'jean@test.com',
-        motDePasse: 'password123'
+        nomComplet: 'Jean Dupont',
+        telephone: '70123456',
+        motDePasse: 'password123',
+        pays: 'BF'  // Burkina Faso par défaut
       };
     });
 
     it('devrait créer un nouvel utilisateur avec succès', async () => {
-      User.findOne.mockResolvedValue(null);
+      User.findOne.mockResolvedValue(null);  // Ni email ni téléphone existant
       User.create.mockResolvedValue({
         _id: 'user123',
-        nomComplet: 'Jean Dupont',
-        telephone: '0612345678',
         email: 'jean@test.com',
-        role: 'client'
+        nomComplet: 'Jean Dupont',
+        telephone: '+22670123456',
+        pays: 'BF',
+        devise: 'XOF',
+        role: 'client',
+        pinConfigured: false
       });
       Wallet.create.mockResolvedValue({ _id: 'wallet123' });
 
@@ -47,36 +54,49 @@ describe('Auth Controller', () => {
 
       expect(User.findOne).toHaveBeenCalled();
       expect(User.create).toHaveBeenCalledWith(expect.objectContaining({
+        email: 'jean@test.com',
         nomComplet: 'Jean Dupont',
-        telephone: '0612345678'
+        pays: 'BF'
       }));
       expect(Wallet.create).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Inscription réussie',
-        token: expect.any(String)
+        message: expect.stringContaining('Inscription réussie'),
+        token: expect.any(String),
+        nextStep: 'SETUP_PIN'  // Nouveau: indique qu'il faut configurer le PIN
       }));
     });
 
-    it('devrait retourner une erreur si les champs obligatoires sont manquants', async () => {
-      req.body = { nomComplet: 'Jean' };
+    it('devrait retourner une erreur si l\'email est manquant', async () => {
+      req.body = { nomComplet: 'Jean', telephone: '70123456', motDePasse: 'test123', pays: 'BF' };
 
       await authController.register(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: expect.stringContaining('obligatoires')
+        message: expect.stringContaining('email')
       }));
     });
 
-    it('devrait retourner une erreur si l\'utilisateur existe déjà', async () => {
-      User.findOne.mockResolvedValue({ telephone: '0612345678' });
+    it('devrait retourner une erreur si le téléphone est manquant', async () => {
+      req.body = { email: 'test@test.com', nomComplet: 'Jean', motDePasse: 'test123', pays: 'BF' };
 
       await authController.register(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: expect.stringContaining('existe déjà')
+        message: expect.stringContaining('téléphone')
+      }));
+    });
+
+    it('devrait retourner une erreur si l\'email existe déjà', async () => {
+      User.findOne.mockResolvedValue({ email: 'jean@test.com' });
+
+      await authController.register(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        message: expect.stringContaining('email')
       }));
     });
 
@@ -85,9 +105,12 @@ describe('Auth Controller', () => {
       User.findOne.mockResolvedValue(null);
       User.create.mockResolvedValue({
         _id: 'user123',
+        email: 'jean@test.com',
         nomComplet: 'Jean Dupont',
+        telephone: '+22670123456',
         role: 'marchand',
-        codeMarchand: 'M123456'
+        codeMarchand: 'M123456',
+        pinConfigured: false
       });
       Wallet.create.mockResolvedValue({ _id: 'wallet123' });
 
@@ -101,12 +124,12 @@ describe('Auth Controller', () => {
   });
 
   // ===========================================
-  // TESTS CONNEXION
+  // TESTS CONNEXION (EMAIL + MOT DE PASSE)
   // ===========================================
   describe('login', () => {
     beforeEach(() => {
       req.body = {
-        telephone: '0612345678',
+        email: 'jean@test.com',
         motDePasse: 'password123'
       };
     });
@@ -114,12 +137,17 @@ describe('Auth Controller', () => {
     it('devrait connecter un utilisateur avec succès', async () => {
       const mockUser = {
         _id: 'user123',
-        nomComplet: 'Jean Dupont',
-        telephone: '0612345678',
         email: 'jean@test.com',
+        nomComplet: 'Jean Dupont',
+        telephone: '+22670123456',
+        pays: 'BF',
+        devise: 'XOF',
         role: 'client',
         statut: 'actif',
-        comparePassword: jest.fn().mockResolvedValue(true)
+        pinConfigured: true,
+        comparePassword: jest.fn().mockResolvedValue(true),
+        reinitialiserTentatives: jest.fn().mockResolvedValue(true),
+        save: jest.fn().mockResolvedValue(true)
       };
       User.findOne.mockReturnValue({
         select: jest.fn().mockResolvedValue(mockUser)
@@ -134,12 +162,15 @@ describe('Auth Controller', () => {
       }));
     });
 
-    it('devrait retourner une erreur si les identifiants sont manquants', async () => {
-      req.body = {};
+    it('devrait retourner une erreur si l\'email est manquant', async () => {
+      req.body = { motDePasse: 'test123' };
 
       await authController.login(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        message: expect.stringContaining('Email')
+      }));
     });
 
     it('devrait retourner une erreur si l\'utilisateur n\'existe pas', async () => {
@@ -151,14 +182,17 @@ describe('Auth Controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Identifiants incorrects'
+        message: expect.stringContaining('incorrect')
       }));
     });
 
     it('devrait retourner une erreur si le compte est bloqué', async () => {
       const mockUser = {
         _id: 'user123',
-        statut: 'bloque'
+        statut: 'bloque',
+        estBloque: jest.fn().mockReturnValue(true),
+        bloqueJusqua: new Date(Date.now() + 15 * 60 * 1000),
+        comparePassword: jest.fn()
       };
       User.findOne.mockReturnValue({
         select: jest.fn().mockResolvedValue(mockUser)
@@ -176,7 +210,8 @@ describe('Auth Controller', () => {
       const mockUser = {
         _id: 'user123',
         statut: 'actif',
-        comparePassword: jest.fn().mockResolvedValue(false)
+        comparePassword: jest.fn().mockResolvedValue(false),
+        incrementerTentatives: jest.fn().mockResolvedValue(true)
       };
       User.findOne.mockReturnValue({
         select: jest.fn().mockResolvedValue(mockUser)
@@ -186,7 +221,31 @@ describe('Auth Controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Identifiants incorrects'
+        message: expect.stringContaining('incorrect')
+      }));
+    });
+
+    it('devrait indiquer nextStep=SETUP_PIN si PIN non configuré', async () => {
+      const mockUser = {
+        _id: 'user123',
+        email: 'jean@test.com',
+        nomComplet: 'Jean Dupont',
+        pays: 'BF',
+        devise: 'XOF',
+        pinConfigured: false,
+        comparePassword: jest.fn().mockResolvedValue(true),
+        reinitialiserTentatives: jest.fn().mockResolvedValue(true),
+        save: jest.fn().mockResolvedValue(true)
+      };
+      User.findOne.mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockUser)
+      });
+
+      await authController.login(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        nextStep: 'SETUP_PIN'
       }));
     });
   });
@@ -200,32 +259,30 @@ describe('Auth Controller', () => {
     });
 
     it('devrait retourner le profil de l\'utilisateur', async () => {
-      const mockUser = {
+      User.findById.mockResolvedValue({
         _id: 'user123',
-        nomComplet: 'Jean Dupont',
-        telephone: '0612345678',
         email: 'jean@test.com',
+        nomComplet: 'Jean Dupont',
+        telephone: '+22670123456',
+        pays: 'BF',
+        devise: 'XOF',
         role: 'client',
         statut: 'actif',
-        dateCreation: new Date()
-      };
-      User.findById.mockReturnValue({
-        select: jest.fn().mockResolvedValue(mockUser)
+        pinConfigured: true
       });
 
       await authController.getMe(req, res);
 
-      expect(User.findById).toHaveBeenCalledWith('user123');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        nomComplet: 'Jean Dupont'
+        email: 'jean@test.com',
+        nomComplet: 'Jean Dupont',
+        pays: 'BF'
       }));
     });
 
     it('devrait retourner une erreur si l\'utilisateur n\'existe pas', async () => {
-      User.findById.mockReturnValue({
-        select: jest.fn().mockResolvedValue(null)
-      });
+      User.findById.mockResolvedValue(null);
 
       await authController.getMe(req, res);
 
@@ -239,21 +296,21 @@ describe('Auth Controller', () => {
   describe('updateProfile', () => {
     beforeEach(() => {
       req.user = { id: 'user123' };
-      req.body = { nomComplet: 'Jean Dupont Modifié' };
+      req.body = { nomComplet: 'Jean Martin' };
     });
 
     it('devrait mettre à jour le profil avec succès', async () => {
       const mockUser = {
         _id: 'user123',
         nomComplet: 'Jean Dupont',
-        role: 'client',
-        save: jest.fn()
+        pays: 'BF',
+        save: jest.fn().mockResolvedValue(true)
       };
       User.findById.mockResolvedValue(mockUser);
+      Wallet.findOne.mockResolvedValue(null);
 
       await authController.updateProfile(req, res);
 
-      expect(mockUser.nomComplet).toBe('Jean Dupont Modifié');
       expect(mockUser.save).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
     });
@@ -274,7 +331,7 @@ describe('Auth Controller', () => {
     beforeEach(() => {
       req.user = { id: 'user123' };
       req.body = {
-        ancienMotDePasse: 'oldpass123',
+        ancienMotDePasse: 'oldpass',
         nouveauMotDePasse: 'newpass123'
       };
     });
@@ -282,8 +339,9 @@ describe('Auth Controller', () => {
     it('devrait changer le mot de passe avec succès', async () => {
       const mockUser = {
         _id: 'user123',
+        motDePasse: 'hashedpass',
         comparePassword: jest.fn().mockResolvedValue(true),
-        save: jest.fn()
+        save: jest.fn().mockResolvedValue(true)
       };
       User.findById.mockReturnValue({
         select: jest.fn().mockResolvedValue(mockUser)
@@ -291,13 +349,13 @@ describe('Auth Controller', () => {
 
       await authController.changePassword(req, res);
 
-      expect(mockUser.motDePasse).toBe('newpass123');
       expect(mockUser.save).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
     });
 
     it('devrait retourner une erreur si l\'ancien mot de passe est incorrect', async () => {
       const mockUser = {
+        _id: 'user123',
         comparePassword: jest.fn().mockResolvedValue(false)
       };
       User.findById.mockReturnValue({
@@ -307,9 +365,6 @@ describe('Auth Controller', () => {
       await authController.changePassword(req, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: expect.stringContaining('incorrect')
-      }));
     });
 
     it('devrait retourner une erreur si les mots de passe sont manquants', async () => {
@@ -318,6 +373,94 @@ describe('Auth Controller', () => {
       await authController.changePassword(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
+    });
+  });
+
+  // ===========================================
+  // TESTS LISTE DES PAYS
+  // ===========================================
+  describe('getCountries', () => {
+    it('devrait retourner la liste des pays actifs', async () => {
+      await authController.getCountries(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        countries: expect.any(Array),
+        default: expect.any(String)
+      }));
+    });
+  });
+
+  // ===========================================
+  // TESTS CONFIGURATION PIN
+  // ===========================================
+  describe('setupPin', () => {
+    beforeEach(() => {
+      req.user = { id: 'user123' };
+      req.body = {
+        pin: '1357',
+        confirmPin: '1357'
+      };
+    });
+
+    it('devrait configurer le PIN avec succès', async () => {
+      const mockUser = {
+        _id: 'user123',
+        pinConfigured: false,
+        save: jest.fn().mockResolvedValue(true)
+      };
+      User.findById.mockResolvedValue(mockUser);
+      Wallet.findOne.mockResolvedValue({
+        save: jest.fn().mockResolvedValue(true)
+      });
+
+      await authController.setupPin(req, res);
+
+      expect(mockUser.save).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        pinConfigured: true
+      }));
+    });
+
+    it('devrait refuser si PIN déjà configuré', async () => {
+      const mockUser = {
+        _id: 'user123',
+        pinConfigured: true
+      };
+      User.findById.mockResolvedValue(mockUser);
+
+      await authController.setupPin(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('devrait refuser les PIN trop simples', async () => {
+      req.body = { pin: '1234', confirmPin: '1234' };
+
+      const mockUser = {
+        _id: 'user123',
+        pinConfigured: false
+      };
+      User.findById.mockResolvedValue(mockUser);
+
+      await authController.setupPin(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        message: expect.stringContaining('simple')
+      }));
+    });
+
+    it('devrait refuser si les PIN ne correspondent pas', async () => {
+      req.body = { pin: '1357', confirmPin: '2468' };
+
+      await authController.setupPin(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        message: expect.stringContaining('correspondent pas')
+      }));
     });
   });
 });

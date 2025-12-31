@@ -1,24 +1,22 @@
 <div class="dashboard-container">
   <!-- Header -->
-  <header class="app-header">
+  <div class="app-header">
     <div class="user-info">
-      <div class="avatar">
-        {{ user()?.nomComplet?.charAt(0) || 'U' }}{{ (user()?.nomComplet?.split(' ') || [])[1]?.charAt(0) || '' }}
-      </div>
+      <div class="avatar">{{ user()?.nomComplet?.charAt(0) || 'U' }}</div>
       <div class="greeting">
-        <span class="greeting-text">{{ greeting() }},</span>
-        <span class="user-name">{{ (user()?.nomComplet?.split(' ') || [])[0] || 'Utilisateur' }}</span>
+        <span class="greeting-text">{{ greeting() }}</span>
+        <span class="user-name">{{ user()?.nomComplet || 'Utilisateur' }}</span>
       </div>
     </div>
     <div class="header-actions">
-      <button mat-icon-button class="notification-btn">
+      <button mat-icon-button class="notification-btn" routerLink="/notifications">
         <mat-icon>notifications_none</mat-icon>
         <span class="notification-badge"></span>
       </button>
       <button mat-icon-button [matMenuTriggerFor]="menu">
-        <mat-icon>menu</mat-icon>
+        <mat-icon>more_vert</mat-icon>
       </button>
-      <mat-menu #menu="matMenu">
+      <mat-menu #menu="matMenu" class="dashboard-menu">
         <button mat-menu-item routerLink="/profile">
           <mat-icon>person</mat-icon>
           <span>Mon profil</span>
@@ -34,52 +32,46 @@
         </button>
       </mat-menu>
     </div>
-  </header>
+  </div>
 
   <!-- Balance Card -->
   <div class="balance-card">
     <div class="balance-header">
       <mat-icon>account_balance_wallet</mat-icon>
       <span>Solde disponible</span>
-      <button mat-icon-button class="toggle-visibility" (click)="toggleBalanceVisibility()">
+      <button mat-icon-button class="toggle-visibility" (click)="showBalance.set(!showBalance())">
         <mat-icon>{{ showBalance() ? 'visibility' : 'visibility_off' }}</mat-icon>
       </button>
     </div>
     <div class="balance-amount">
       @if (showBalance()) {
-      {{ wallet()?.solde | currencyXOF }}
+        {{ wallet()?.solde | currencyXOF }}
       } @else {
-      ••••••
+        ••••••••
       }
     </div>
     <div class="balance-divider"></div>
     <div class="savings-row">
-      <mat-icon>trending_up</mat-icon>
+      <mat-icon>savings</mat-icon>
       <span>Épargne</span>
-      <span class="savings-amount">
-        @if (showBalance()) {
-        {{ totalSavings | currencyXOF }}
-        } @else {
-        ••••
-        }
-      </span>
+      <span class="savings-amount">{{ totalSavings | currencyXOF }}</span>
     </div>
   </div>
 
   <!-- Quick Actions -->
-  <section class="quick-actions-section">
-    <h2 class="section-title">Actions rapides</h2>
+  <div class="quick-actions-section">
+    <h2 class="section-title">Services</h2>
     <div class="quick-actions-grid">
       <div class="quick-action-item" (click)="navigateTo('/transactions/deposit')">
         <div class="action-icon deposit">
-          <mat-icon>download</mat-icon>
+          <mat-icon>add_circle</mat-icon>
         </div>
         <span class="action-label">Dépôt</span>
       </div>
 
       <div class="quick-action-item" (click)="navigateTo('/transactions/withdraw')">
         <div class="action-icon withdraw">
-          <mat-icon>upload</mat-icon>
+          <mat-icon>remove_circle</mat-icon>
         </div>
         <span class="action-label">Retrait</span>
       </div>
@@ -91,9 +83,9 @@
         <span class="action-label">Transfert</span>
       </div>
 
-      <div class="quick-action-item" (click)="navigateTo('/transactions/merchant-payment')">
+      <div class="quick-action-item" (click)="navigateTo('/transactions/merchant')">
         <div class="action-icon payment">
-          <mat-icon>store</mat-icon>
+          <mat-icon>qr_code_scanner</mat-icon>
         </div>
         <span class="action-label">Paiement</span>
       </div>
@@ -105,71 +97,61 @@
         <span class="action-label">Épargne</span>
       </div>
 
-      <div class="quick-action-item" (click)="openScanner()">
+      <div class="quick-action-item" (click)="navigateTo('/transactions/history')">
         <div class="action-icon scanner">
-          <mat-icon>qr_code_scanner</mat-icon>
+          <mat-icon>history</mat-icon>
         </div>
-        <span class="action-label">Scanner</span>
+        <span class="action-label">Historique</span>
+      </div>
+
+      <div class="quick-action-item" (click)="navigateTo('/dashboard/statistics')">
+        <div class="action-icon statistics">
+          <mat-icon>analytics</mat-icon>
+        </div>
+        <span class="action-label">Statistiques</span>
       </div>
     </div>
-  </section>
+  </div>
 
   <!-- Recent Transactions -->
-  <section class="transactions-section">
+  <div class="transactions-section">
     <div class="section-header">
       <h2 class="section-title">Transactions récentes</h2>
       <a class="view-all-link" routerLink="/transactions/history">
         Voir tout
-        <mat-icon>chevron_right</mat-icon>
+        <mat-icon>arrow_forward</mat-icon>
       </a>
     </div>
 
-    @if (loading()) {
-    <div class="loading-container">
-      <mat-spinner diameter="32"></mat-spinner>
-    </div>
-    } @else if (recentTransactions.length > 0) {
-    <div class="transactions-list">
-      @for (transaction of recentTransactions; track transaction.id) {
-      <div class="transaction-item" (click)="viewTransaction(transaction)">
-        <div class="transaction-icon" [class]="getTransactionIconClass(transaction.type)">
+    <div class="transactions-list" *ngIf="recentTransactions.length > 0; else noTransactions">
+      <div 
+        class="transaction-item" 
+        *ngFor="let transaction of recentTransactions"
+        (click)="viewTransaction(transaction)">
+        <div class="transaction-icon" [ngClass]="getTransactionIconClass(transaction.type)">
           <mat-icon>{{ getTransactionIcon(transaction.type) }}</mat-icon>
         </div>
         <div class="transaction-details">
-          <span class="transaction-title">{{ getTransactionTitle(transaction) }}</span>
-          <span class="transaction-date">{{ transaction.dateCreation | date:'dd MMM, HH:mm' }}</span>
+          <div class="transaction-title">{{ getTransactionTitle(transaction) }}</div>
+          <div class="transaction-date">{{ transaction.dateCreation | date:'dd/MM/yyyy HH:mm' }}</div>
         </div>
-        <div class="transaction-amount" [class]="getAmountClass(transaction.type)">
+        <div class="transaction-amount" [ngClass]="getAmountClass(transaction.type)">
           {{ getAmountSign(transaction.type) }}{{ transaction.montant | currencyXOF }}
         </div>
       </div>
-      }
     </div>
-    } @else {
-    <div class="empty-state">
-      <mat-icon>receipt_long</mat-icon>
-      <p>Aucune transaction récente</p>
-    </div>
-    }
-  </section>
+
+    <ng-template #noTransactions>
+      <div class="empty-state">
+        <mat-icon>receipt_long</mat-icon>
+        <p>Aucune transaction récente</p>
+        <button mat-flat-button color="primary" routerLink="/transactions/deposit">
+          Faire un dépôt
+        </button>
+      </div>
+    </ng-template>
+  </div>
 
   <!-- Bottom Navigation -->
-  <nav class="bottom-nav">
-    <a class="nav-item active" routerLink="/dashboard" routerLinkActive="active">
-      <mat-icon>home</mat-icon>
-      <span>Accueil</span>
-    </a>
-    <a class="nav-item" routerLink="/transactions/history" routerLinkActive="active">
-      <mat-icon>history</mat-icon>
-      <span>Historique</span>
-    </a>
-    <a class="nav-item" routerLink="/profile" routerLinkActive="active">
-      <mat-icon>person_outline</mat-icon>
-      <span>Profil</span>
-    </a>
-    <a class="nav-item" routerLink="/settings" routerLinkActive="active">
-      <mat-icon>settings</mat-icon>
-      <span>Paramètres</span>
-    </a>
-  </nav>
+  <app-bottom-nav></app-bottom-nav>
 </div>

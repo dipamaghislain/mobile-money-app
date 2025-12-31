@@ -1,145 +1,361 @@
 // frontend/src/app/features/admin/admin-user-detail/admin-user-detail.component.scss
 
-.admin-user-detail {
+// Variables
+$primary: #6366f1;
+$success: #10b981;
+$warning: #f59e0b;
+$danger: #ef4444;
+$info: #3b82f6;
+
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-800: #1f2937;
+
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+.user-detail-page {
   padding: 24px;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
-// Header
-.page-header {
+// Page Navigation
+.page-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  
+  .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $gray-600;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: $radius-md;
+    transition: all 0.2s;
+    
+    &:hover {
+      background: $gray-100;
+      color: $primary;
+    }
+    
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+  
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    
+    a {
+      color: $gray-500;
+      text-decoration: none;
+      
+      &:hover {
+        color: $primary;
+      }
+    }
+    
+    span {
+      color: $gray-700;
+      font-weight: 500;
+    }
+    
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: $gray-400;
+    }
+  }
+}
+
+// Loading & Error States
+.loading-state, .error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid $gray-200;
+    border-top-color: $primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+  
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: $danger;
+    margin-bottom: 16px;
+  }
+  
+  h3 {
+    margin: 0 0 8px;
+    color: $gray-700;
+  }
+  
+  p {
+    margin: 0 0 20px;
+    color: $gray-500;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// User Header
+.user-header {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 24px;
+  padding: 32px;
+  background: white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
   margin-bottom: 24px;
-
-  .back-btn {
-    background: #f1f5f9;
+  border: 1px solid $gray-100;
+  
+  &.blocked {
+    border-left: 4px solid $danger;
+    background: linear-gradient(90deg, rgba($danger, 0.03), white);
   }
-
-  h1 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 600;
-    color: #1a1a2e;
+  
+  .user-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  
+  .user-info {
+    flex: 1;
+    
+    .user-name-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      
+      h1 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: $gray-800;
+      }
+      
+      .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        
+        &.actif {
+          background: rgba($success, 0.1);
+          color: $success;
+        }
+        
+        &.bloque {
+          background: rgba($danger, 0.1);
+          color: $danger;
+        }
+      }
+    }
+    
+    .user-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: $gray-500;
+      font-size: 0.9rem;
+      
+      .role-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: $radius-sm;
+        font-weight: 500;
+        
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+        
+        &.client {
+          background: rgba($info, 0.1);
+          color: $info;
+        }
+        
+        &.marchand {
+          background: rgba($warning, 0.1);
+          color: $warning;
+        }
+        
+        &.admin {
+          background: rgba($primary, 0.1);
+          color: $primary;
+        }
+      }
+      
+      .separator {
+        color: $gray-300;
+      }
+    }
+  }
+  
+  .user-actions {
+    display: flex;
+    gap: 12px;
+    
+    button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
   }
 }
 
-// Loading
-.loading-container {
-  display: flex;
-  justify-content: center;
-  padding: 64px;
+// Content Grid
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
 }
 
-// Error
-.error-card {
-  background: #fef2f2;
-  border-left: 4px solid #ef4444;
-  border-radius: 12px;
+// Card Component
+.card {
+  background: white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  border: 1px solid $gray-100;
+  overflow: hidden;
+  
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    border-bottom: 1px solid $gray-100;
+    
+    mat-icon {
+      color: $primary;
+    }
+    
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: $gray-800;
+    }
+  }
+  
+  .card-body {
+    padding: 24px;
+  }
+}
 
-  mat-card-content {
+// Info Card
+.info-card {
+  .info-row {
     display: flex;
     align-items: center;
     gap: 16px;
-
+    padding: 16px 0;
+    border-bottom: 1px solid $gray-100;
+    
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    
+    &:first-child {
+      padding-top: 0;
+    }
+  }
+  
+  .info-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-md;
+    background: rgba($primary, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
     mat-icon {
-      color: #ef4444;
+      color: $primary;
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
     }
-
-    p {
-      flex: 1;
-      margin: 0;
-      color: #dc2626;
-    }
-  }
-}
-
-// Grid
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-}
-
-// Cards
-.info-card {
-  border-radius: 16px;
-
-  mat-card-header {
-    padding: 20px 20px 0;
-
-    mat-icon[mat-card-avatar] {
-      background: #f1f5f9;
-      border-radius: 12px;
-      padding: 10px;
-      color: #6366f1;
-      width: auto;
-      height: auto;
-    }
-
-    mat-card-subtitle {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
+    
+    &.merchant {
+      background: rgba($warning, 0.1);
+      
+      mat-icon {
+        color: $warning;
+      }
     }
   }
-
-  mat-card-content {
-    padding: 20px;
-  }
-
-  mat-card-actions {
-    padding: 16px 20px;
-    border-top: 1px solid #f1f5f9;
-  }
-}
-
-// User Card
-.user-card {
-  .user-avatar {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 50%;
-    padding: 12px;
-
-    mat-icon {
-      color: white;
-    }
-  }
-}
-
-.info-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.info-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-
-  mat-icon {
-    color: #64748b;
-    margin-top: 2px;
-  }
-
+  
   .info-content {
+    flex: 1;
     display: flex;
     flex-direction: column;
-
-    .info-label {
-      font-size: 12px;
-      color: #64748b;
+    gap: 2px;
+    
+    .label {
+      font-size: 0.8rem;
+      color: $gray-500;
     }
-
-    .info-value {
+    
+    .value {
+      font-size: 1rem;
+      color: $gray-800;
       font-weight: 500;
-      color: #1a1a2e;
-
+      
       &.code {
         font-family: monospace;
-        background: #f1f5f9;
+        background: $gray-100;
         padding: 4px 8px;
         border-radius: 4px;
       }
@@ -149,131 +365,134 @@
 
 // Wallet Card
 .wallet-card {
-  mat-icon[mat-card-avatar] {
-    background: linear-gradient(135deg, #10b981, #34d399);
-    color: white;
+  .balance-display {
+    text-align: center;
+    padding: 20px 0;
+    
+    .balance-label {
+      display: block;
+      font-size: 0.85rem;
+      color: $gray-500;
+      margin-bottom: 8px;
+    }
+    
+    .balance-value {
+      display: block;
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: $gray-800;
+      margin-bottom: 12px;
+      
+      small {
+        font-size: 1rem;
+        font-weight: 500;
+        color: $gray-500;
+      }
+    }
+    
+    .wallet-status {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      
+      &.actif {
+        background: rgba($success, 0.1);
+        color: $success;
+      }
+      
+      &.bloque, &.suspendu {
+        background: rgba($danger, 0.1);
+        color: $danger;
+      }
+    }
   }
-}
-
-.wallet-balance {
-  text-align: center;
-  padding: 24px 0;
-
-  .balance-label {
-    display: block;
-    font-size: 14px;
-    color: #64748b;
-    margin-bottom: 8px;
-  }
-
-  .balance-value {
-    font-size: 32px;
-    font-weight: 700;
-    color: #10b981;
-  }
-}
-
-mat-divider {
-  margin: 16px 0;
-}
-
-.wallet-info {
-  display: flex;
-  justify-content: space-around;
-}
-
-.wallet-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-
-  .wallet-label {
-    font-size: 12px;
-    color: #64748b;
-  }
-
-  .wallet-value {
-    font-weight: 500;
-    color: #1a1a2e;
+  
+  .no-wallet {
+    text-align: center;
+    padding: 30px;
+    color: $gray-400;
+    
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+    }
+    
+    p {
+      margin: 0;
+    }
   }
 }
 
 // Stats Card
 .stats-card {
-  mat-icon[mat-card-avatar] {
-    background: linear-gradient(135deg, #f59e0b, #fbbf24);
-    color: white;
+  grid-column: 1 / -1;
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
   }
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 12px;
-
-  mat-icon {
-    font-size: 28px;
-    width: 28px;
-    height: 28px;
-    color: #6366f1;
-    margin-bottom: 8px;
-  }
-
-  .stat-content {
+  
+  .stat-item {
     display: flex;
-    flex-direction: column;
-
-    .stat-value {
-      font-size: 20px;
-      font-weight: 700;
-      color: #1a1a2e;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: $gray-50;
+    border-radius: $radius-md;
+    
+    .stat-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: $radius-md;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+        color: white;
+      }
+      
+      &.transactions {
+        background: linear-gradient(135deg, $info, #60a5fa);
+      }
+      
+      &.savings {
+        background: linear-gradient(135deg, $success, #34d399);
+      }
+      
+      &.total {
+        background: linear-gradient(135deg, $primary, #818cf8);
+      }
     }
-
-    .stat-label {
-      font-size: 12px;
-      color: #64748b;
+    
+    .stat-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: $gray-800;
+      }
+      
+      .stat-label {
+        font-size: 0.85rem;
+        color: $gray-500;
+      }
     }
   }
 }
-
-// Chips
-mat-chip {
-  font-size: 12px;
-
-  &.role-client {
-    background: #dbeafe;
-    color: #1d4ed8;
-  }
-
-  &.role-merchant {
-    background: #fce7f3;
-    color: #be185d;
-  }
-
-  &.role-admin {
-    background: #fef3c7;
-    color: #b45309;
-  }
-
-  &.status-active {
-    background: #d1fae5;
-    color: #059669;
-  }
-
-  &.status-blocked {
-    background: #fee2e2;
-    color: #dc2626;
-  }
-}
-

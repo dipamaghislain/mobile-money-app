@@ -6,6 +6,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatRippleModule } from '@angular/material/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
+import { BottomNavComponent } from '../../shared/components/bottom-nav/bottom-nav';
 
 @Component({
     selector: 'app-settings',
@@ -16,7 +17,8 @@ import { FormsModule } from '@angular/forms';
         MatSlideToggleModule,
         MatRippleModule,
         MatSnackBarModule,
-        FormsModule
+        FormsModule,
+        BottomNavComponent
     ],
     templateUrl: './settings.component.html',
     styleUrls: ['./settings.component.scss']

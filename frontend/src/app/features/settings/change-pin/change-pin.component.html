@@ -87,8 +87,10 @@
                         <mat-spinner diameter="20"></mat-spinner>
                         <span>En cours...</span>
                         } @else {
-                        <mat-icon>check</mat-icon>
-                        <span>Modifier le PIN</span>
+                        <ng-container>
+                          <mat-icon>check</mat-icon>
+                          <span>Modifier le PIN</span>
+                        </ng-container>
                         }
                     </button>
                 </div>
@@ -97,22 +99,5 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <a class="nav-item" routerLink="/dashboard">
-            <mat-icon>home</mat-icon>
-            <span>Accueil</span>
-        </a>
-        <a class="nav-item" routerLink="/transactions/history">
-            <mat-icon>history</mat-icon>
-            <span>Historique</span>
-        </a>
-        <a class="nav-item" routerLink="/profile">
-            <mat-icon>person_outline</mat-icon>
-            <span>Profil</span>
-        </a>
-        <a class="nav-item active" routerLink="/settings">
-            <mat-icon>settings</mat-icon>
-            <span>Paramètres</span>
-        </a>
-    </nav>
+    <app-bottom-nav></app-bottom-nav>
 </div>

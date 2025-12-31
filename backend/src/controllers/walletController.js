@@ -228,18 +228,187 @@ exports.getStatistics = async (req, res) => {
     }
 
     const days = parseInt(periode, 10) || 30;
+    const dateDebut = new Date();
+    dateDebut.setDate(dateDebut.getDate() - days);
+    dateDebut.setHours(0, 0, 0, 0);
 
-    const stats = await Transaction.obtenirStatistiques(wallet._id, days);
+    // Statistiques par type
+    const statsByType = await Transaction.aggregate([
+      {
+        $match: {
+          $or: [
+            { walletSourceId: wallet._id },
+            { walletDestinationId: wallet._id }
+          ],
+          dateCreation: { $gte: dateDebut },
+          statut: 'SUCCES'
+        }
+      },
+      {
+        $group: {
+          _id: '$type',
+          count: { $sum: 1 },
+          montant: { $sum: '$montant' }
+        }
+      }
+    ]);
+
+    // Statistiques par jour pour le graphique
+    const statsByDay = await Transaction.aggregate([
+      {
+        $match: {
+          $or: [
+            { walletSourceId: wallet._id },
+            { walletDestinationId: wallet._id }
+          ],
+          dateCreation: { $gte: dateDebut },
+          statut: 'SUCCES'
+        }
+      },
+      {
+        $project: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$dateCreation' } },
+          type: 1,
+          montant: 1,
+          isEntree: {
+            $in: ['$type', ['DEPOSIT', 'EPARGNE_OUT']]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: '$date',
+          entrees: {
+            $sum: {
+              $cond: ['$isEntree', '$montant', 0]
+            }
+          },
+          sorties: {
+            $sum: {
+              $cond: ['$isEntree', 0, '$montant']
+            }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    // Formater les données par jour
+    const parJour = statsByDay.map(d => ({
+      date: d._id,
+      entrees: d.entrees,
+      sorties: d.sorties,
+      count: d.count
+    }));
+
+    // Formater les données par type
+    const parType = statsByType.map(t => ({
+      type: t._id,
+      count: t.count,
+      montant: t.montant
+    }));
+
+    // Calculer les totaux
+    const totalEntrees = parType
+      .filter(t => ['DEPOSIT', 'EPARGNE_OUT'].includes(t.type))
+      .reduce((sum, t) => sum + t.montant, 0);
+
+    const totalSorties = parType
+      .filter(t => ['WITHDRAW', 'TRANSFER', 'MERCHANT_PAYMENT', 'EPARGNE_IN'].includes(t.type))
+      .reduce((sum, t) => sum + t.montant, 0);
+
+    const nombreTransactions = parType.reduce((sum, t) => sum + t.count, 0);
 
     return res.status(200).json({
       soldeActuel: wallet.solde,
       devise: wallet.devise,
-      statistiques: stats
+      statistiques: {
+        totalEntrees,
+        totalSorties,
+        nombreTransactions,
+        parJour,
+        parType
+      }
     });
   } catch (error) {
     console.error('Erreur lors de la récupération des statistiques:', error);
     return res.status(500).json({
       message: 'Erreur lors de la récupération des statistiques',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Exporter les transactions (CSV ou JSON)
+// @route   GET /api/wallet/transactions/export
+// @access  Private
+exports.exportTransactions = async (req, res) => {
+  try {
+    const { format = 'csv', startDate, endDate, type } = req.query;
+
+    const wallet = await Wallet.findOne({ utilisateurId: req.user.id });
+
+    if (!wallet) {
+      return res.status(404).json({
+        message: 'Portefeuille non trouvé'
+      });
+    }
+
+    const options = {
+      type: type || null,
+      startDate: startDate || null,
+      endDate: endDate || null,
+      limit: 1000, // Limite pour l'export
+      skip: 0
+    };
+
+    const transactions = await Transaction.obtenirParWallet(wallet._id, options);
+
+    if (format === 'csv') {
+      // Générer le CSV
+      const csvHeader = 'Date,Type,Montant,Devise,Description,Référence,Statut\n';
+      const csvRows = transactions.map(t => {
+        const date = new Date(t.dateCreation).toISOString().split('T')[0];
+        const type = t.type || '';
+        const montant = t.montant || 0;
+        const devise = t.devise || 'XOF';
+        const description = (t.description || '').replace(/,/g, ';');
+        const reference = t.reference || '';
+        const statut = t.statut || '';
+        return `${date},${type},${montant},${devise},"${description}",${reference},${statut}`;
+      }).join('\n');
+
+      const csv = csvHeader + csvRows;
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=transactions_${Date.now()}.csv`);
+      return res.send('\uFEFF' + csv); // BOM pour Excel
+    }
+
+    // Format JSON par défaut
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename=transactions_${Date.now()}.json`);
+    return res.json({
+      exportDate: new Date().toISOString(),
+      count: transactions.length,
+      transactions: transactions.map(t => ({
+        date: t.dateCreation,
+        type: t.type,
+        montant: t.montant,
+        devise: t.devise,
+        description: t.description,
+        reference: t.reference,
+        statut: t.statut
+      }))
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de l\'export des transactions:', error);
+    return res.status(500).json({
+      message: 'Erreur lors de l\'export des transactions',
       error: error.message
     });
   }

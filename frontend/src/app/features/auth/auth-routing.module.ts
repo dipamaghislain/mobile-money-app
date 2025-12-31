@@ -4,6 +4,8 @@ import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { ForgotPassword } from './forgot-password/forgot-password';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
+import { SetupPinComponent } from './setup-pin/setup-pin.component';
+import { AuthGuard } from '../../core/guards/auth.guard';
 
 const routes: Routes = [
   {
@@ -26,6 +28,11 @@ const routes: Routes = [
   {
     path: 'reset-password',
     component: ResetPasswordComponent
+  },
+  {
+    path: 'setup-pin',
+    component: SetupPinComponent,
+    canActivate: [AuthGuard]  // Doit être connecté pour configurer le PIN
   }
 ];
 

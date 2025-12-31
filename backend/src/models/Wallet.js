@@ -1,7 +1,19 @@
 // backend/src/models/Wallet.js
+// Portefeuille Mobile Money simplifié
 
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+
+// Constantes inline
+const WALLET_STATUS = {
+  ACTIVE: 'actif',
+  INACTIVE: 'inactif',
+  SUSPENDED: 'suspendu',
+  BLOCKED: 'bloque'
+};
+
+const SUPPORTED_CURRENCIES = ['XOF', 'XAF', 'GNF', 'EUR', 'USD'];
+const DEFAULT_CURRENCY = 'XOF';
 
 const walletSchema = new mongoose.Schema(
   {
@@ -18,10 +30,9 @@ const walletSchema = new mongoose.Schema(
     },
     devise: {
       type: String,
-      default: 'XOF',
+      default: DEFAULT_CURRENCY,
       uppercase: true,
-      minlength: 3,
-      maxlength: 3,
+      enum: SUPPORTED_CURRENCIES,
     },
     pin: {
       type: String,
@@ -30,8 +41,8 @@ const walletSchema = new mongoose.Schema(
     },
     statut: {
       type: String,
-      enum: ['actif', 'bloque', 'suspendu'],
-      default: 'actif',
+      enum: Object.values(WALLET_STATUS),
+      default: WALLET_STATUS.ACTIVE,
     },
     tentativesPinEchouees: {
       type: Number,
@@ -41,28 +52,16 @@ const walletSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-    dateCreation: {
-      type: Date,
-      default: Date.now,
-    },
-    dateMiseAJour: {
-      type: Date,
-      default: Date.now,
-    },
   },
   {
     timestamps: true,
   }
 );
 
-// `utilisateurId` a déjà `unique: true` dans la définition du champ
-// pour éviter la création d'index en double, on évite de redéclarer
-// walletSchema.index({ utilisateurId: 1 });
-
+// Hash PIN avant sauvegarde
 walletSchema.pre('save', async function () {
-  this.dateMiseAJour = Date.now();
-
   if (this.isModified('pin') && this.pin) {
+    // Ne pas re-hasher si déjà hashé
     if (!this.pin.startsWith('$2')) {
       const salt = await bcrypt.genSalt(10);
       this.pin = await bcrypt.hash(this.pin, salt);
@@ -70,24 +69,19 @@ walletSchema.pre('save', async function () {
   }
 });
 
+// Comparer le PIN
 walletSchema.methods.comparePin = async function (pinCandidat) {
-  try {
-    if (!this.pin) return false;
-    return await bcrypt.compare(pinCandidat, this.pin);
-  } catch (error) {
-    throw new Error('Erreur lors de la comparaison du PIN');
-  }
+  if (!this.pin) return false;
+  return bcrypt.compare(String(pinCandidat), this.pin);
 };
 
+// Vérifier si bloqué
 walletSchema.methods.estBloque = function () {
-  if (this.statut === 'bloque') return true;
+  if (this.statut === 'bloque' || this.statut === 'suspendu') return true;
 
   if (this.dateBlocagePin) {
     const maintenant = new Date();
-    const dureeBloquage = parseInt(process.env.PIN_LOCK_DURATION_MINUTES, 10) || 30;
-    const finBlocage = new Date(
-      this.dateBlocagePin.getTime() + dureeBloquage * 60000
-    );
+    const finBlocage = new Date(this.dateBlocagePin.getTime() + 15 * 60000); // 15 min
 
     if (maintenant < finBlocage) {
       return true;
@@ -99,34 +93,29 @@ walletSchema.methods.estBloque = function () {
   return false;
 };
 
+// Incrémenter tentatives échouées
 walletSchema.methods.incrementerTentativesEchouees = async function () {
   this.tentativesPinEchouees += 1;
-  const maxTentatives = parseInt(process.env.MAX_PIN_ATTEMPTS, 10) || 3;
 
-  if (this.tentativesPinEchouees >= maxTentatives) {
+  if (this.tentativesPinEchouees >= 3) {
     this.dateBlocagePin = new Date();
   }
 
   await this.save();
+  return {
+    tentatives: this.tentativesPinEchouees,
+    bloque: this.tentativesPinEchouees >= 3
+  };
 };
 
+// Réinitialiser tentatives
 walletSchema.methods.reinitialiserTentatives = async function () {
-  await this.constructor.updateOne(
-    { _id: this._id },
-    {
-      $set: {
-        tentativesPinEchouees: 0,
-        dateBlocagePin: null,
-        dateMiseAJour: new Date()
-      }
-    }
-  );
-
   this.tentativesPinEchouees = 0;
   this.dateBlocagePin = null;
-  this.dateMiseAJour = new Date();
+  await this.save();
 };
 
+// Créditer le compte
 walletSchema.methods.crediter = async function (montant) {
   if (montant <= 0) {
     throw new Error('Le montant doit être positif');
@@ -136,6 +125,7 @@ walletSchema.methods.crediter = async function (montant) {
   return this.solde;
 };
 
+// Débiter le compte
 walletSchema.methods.debiter = async function (montant) {
   if (montant <= 0) {
     throw new Error('Le montant doit être positif');
@@ -148,6 +138,7 @@ walletSchema.methods.debiter = async function (montant) {
   return this.solde;
 };
 
+// Vérifier solde suffisant
 walletSchema.methods.aSoldeSuffisant = function (montant) {
   return this.solde >= montant;
 };
@@ -155,3 +146,4 @@ walletSchema.methods.aSoldeSuffisant = function (montant) {
 const Wallet = mongoose.model('Wallet', walletSchema);
 
 module.exports = Wallet;
+module.exports.WALLET_STATUS = WALLET_STATUS;

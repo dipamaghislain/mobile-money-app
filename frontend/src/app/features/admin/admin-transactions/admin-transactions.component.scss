@@ -1,230 +1,395 @@
 // frontend/src/app/features/admin/admin-transactions/admin-transactions.component.scss
 
-.admin-transactions {
+// Variables
+$primary: #6366f1;
+$success: #10b981;
+$warning: #f59e0b;
+$danger: #ef4444;
+$info: #3b82f6;
+
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-800: #1f2937;
+
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+.transactions-page {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-// Header
-.page-header {
+// Page Navigation
+.page-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
-
-  .header-content {
+  
+  .back-btn {
     display: flex;
     align-items: center;
-    gap: 16px;
-
-    .back-btn {
-      background: #f1f5f9;
+    gap: 8px;
+    color: $gray-600;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: $radius-md;
+    transition: all 0.2s;
+    
+    &:hover {
+      background: $gray-100;
+      color: $primary;
     }
+    
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+  
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    
+    a {
+      color: $gray-500;
+      text-decoration: none;
+      
+      &:hover {
+        color: $primary;
+      }
+    }
+    
+    span {
+      color: $gray-700;
+      font-weight: 500;
+    }
+    
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: $gray-400;
+    }
+  }
+}
 
+// Page Header
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  
+  .header-content {
     h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 600;
-      color: #1a1a2e;
+      margin: 0 0 4px;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: $gray-800;
     }
-
+    
     p {
-      margin: 4px 0 0;
-      color: #64748b;
-      font-size: 14px;
+      margin: 0;
+      color: $gray-500;
     }
+  }
+}
+
+// Stats Row
+.stats-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: white;
+  border-radius: $radius-md;
+  border: 1px solid $gray-200;
+  box-shadow: $shadow-md;
+  
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  
+  .stat-label {
+    font-size: 0.85rem;
+    color: $gray-500;
+  }
+  
+  &.success {
+    border-color: rgba($success, 0.3);
+    
+    mat-icon, .stat-value { color: $success; }
+  }
+  
+  &.pending {
+    border-color: rgba($warning, 0.3);
+    
+    mat-icon, .stat-value { color: $warning; }
+  }
+  
+  &.error {
+    border-color: rgba($danger, 0.3);
+    
+    mat-icon, .stat-value { color: $danger; }
   }
 }
 
 // Filters
 .filters-card {
+  background: white;
+  border-radius: $radius-lg;
+  padding: 20px 24px;
   margin-bottom: 24px;
-  border-radius: 16px;
-
-  mat-expansion-panel {
-    box-shadow: none;
-
-    mat-panel-title {
+  box-shadow: $shadow-md;
+  border: 1px solid $gray-100;
+  
+  .filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    
+    .filters-title {
       display: flex;
       align-items: center;
       gap: 8px;
-
+      font-weight: 600;
+      color: $gray-700;
+      
       mat-icon {
-        color: #6366f1;
+        color: $gray-500;
       }
     }
   }
-}
-
-.filters-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
-  padding-top: 16px;
-
-  .clear-btn {
-    height: 56px;
-  }
-}
-
-// Loading
-.loading-container {
-  display: flex;
-  justify-content: center;
-  padding: 48px;
-}
-
-// Error
-.error-card {
-  background: #fef2f2;
-  border-left: 4px solid #ef4444;
-  border-radius: 12px;
-
-  mat-card-content {
-    display: flex;
-    align-items: center;
+  
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
-
-    mat-icon {
-      color: #ef4444;
-    }
-
-    p {
-      flex: 1;
-      margin: 0;
-      color: #dc2626;
+    
+    mat-form-field {
+      width: 100%;
     }
   }
+}
+
+// Loading & Error States
+.loading-state, .error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  background: white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid $gray-200;
+    border-top-color: $primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+  
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: $danger;
+    margin-bottom: 16px;
+  }
+  
+  h3 {
+    margin: 0 0 8px;
+    color: $gray-700;
+  }
+  
+  p {
+    margin: 0 0 20px;
+    color: $gray-500;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 // Table
 .table-card {
-  border-radius: 16px;
+  background: white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  border: 1px solid $gray-100;
   overflow: hidden;
 }
 
 .transactions-table {
   width: 100%;
-
-  th {
-    background: #f8fafc;
-    color: #475569;
+  
+  th.mat-header-cell {
+    background: $gray-50;
     font-weight: 600;
+    color: $gray-600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 16px;
+    border-bottom: 1px solid $gray-200;
   }
-
-  td {
-    color: #334155;
+  
+  td.mat-cell {
+    padding: 16px;
+    border-bottom: 1px solid $gray-100;
+    font-size: 0.9rem;
+    color: $gray-700;
+    vertical-align: middle;
   }
-}
-
-.date-cell {
-  display: flex;
-  flex-direction: column;
-
-  .date {
+  
+  tr.mat-row {
+    transition: background 0.2s;
+    
+    &:hover {
+      background: $gray-50;
+    }
+    
+    &.failed {
+      background: rgba($danger, 0.03);
+    }
+  }
+  
+  .date-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    
+    .date {
+      font-weight: 500;
+      color: $gray-800;
+    }
+    
+    .time {
+      font-size: 0.8rem;
+      color: $gray-400;
+    }
+  }
+  
+  .type-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    .type-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: $radius-sm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: white;
+      }
+      
+      &.deposit { background: linear-gradient(135deg, $success, #34d399); }
+      &.withdraw { background: linear-gradient(135deg, $warning, #fbbf24); }
+      &.transfer { background: linear-gradient(135deg, $info, #60a5fa); }
+      &.merchant_payment { background: linear-gradient(135deg, $primary, #818cf8); }
+      &.epargne_in, &.epargne_out { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+    }
+  }
+  
+  .user-link {
+    color: $primary;
+    text-decoration: none;
     font-weight: 500;
+    
+    &:hover {
+      text-decoration: underline;
+    }
   }
-
-  .time {
-    font-size: 12px;
-    color: #64748b;
+  
+  .na {
+    color: $gray-400;
   }
-}
-
-.type-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  width: fit-content;
-
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+  
+  .amount {
+    font-weight: 600;
+    font-size: 0.95rem;
+    
+    &.credit {
+      color: $success;
+    }
+    
+    &.debit {
+      color: $gray-700;
+    }
   }
-
-  span {
-    font-size: 13px;
-    font-weight: 500;
+  
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+    
+    &.succes {
+      background: rgba($success, 0.1);
+      color: $success;
+    }
+    
+    &.echec {
+      background: rgba($danger, 0.1);
+      color: $danger;
+    }
+    
+    &.en_attente {
+      background: rgba($warning, 0.1);
+      color: $warning;
+    }
   }
-
-  &.type-deposit {
-    background: #d1fae5;
-    color: #059669;
-  }
-
-  &.type-withdraw {
-    background: #fee2e2;
-    color: #dc2626;
-  }
-
-  &.type-transfer {
-    background: #dbeafe;
-    color: #2563eb;
-  }
-
-  &.type-merchant {
-    background: #fce7f3;
-    color: #be185d;
-  }
-
-  &.type-other {
-    background: #f1f5f9;
-    color: #64748b;
-  }
-}
-
-.user-cell {
-  display: flex;
-  flex-direction: column;
-
-  .user-name {
-    font-weight: 500;
-    font-size: 13px;
-  }
-
-  .user-phone {
-    font-size: 12px;
-    color: #64748b;
-  }
-}
-
-.na {
-  color: #94a3b8;
-}
-
-.amount {
-  font-weight: 600;
-  font-size: 14px;
-}
-
-// Status chips
-mat-chip {
-  font-size: 12px;
-
-  &.status-success {
-    background: #d1fae5;
-    color: #059669;
-  }
-
-  &.status-error {
-    background: #fee2e2;
-    color: #dc2626;
-  }
-
-  &.status-pending {
-    background: #fef3c7;
-    color: #b45309;
-  }
-}
-
-.error-icon {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
-  color: #ef4444;
-  margin-left: 8px;
-  cursor: help;
 }
 
 // Empty State
@@ -233,20 +398,30 @@ mat-chip {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px;
-  color: #64748b;
-
+  padding: 80px 20px;
+  text-align: center;
+  
   mat-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: $gray-300;
     margin-bottom: 16px;
-    opacity: 0.5;
+  }
+  
+  h3 {
+    margin: 0 0 8px;
+    font-weight: 600;
+    color: $gray-700;
+  }
+  
+  p {
+    margin: 0;
+    color: $gray-500;
   }
 }
 
 // Paginator
 mat-paginator {
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid $gray-100;
 }
-

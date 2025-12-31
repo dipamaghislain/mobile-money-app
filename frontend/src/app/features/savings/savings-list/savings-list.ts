@@ -1,64 +1,84 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+// src/app/features/savings/savings-list/savings-list.ts
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { Router } from '@angular/router';
 
-import { SavingsService } from '../../../core/services/savings.service';
+import { SavingsService, SavingsGoal } from '../../../core/services/savings.service';
 import { WalletService } from '../../../core/services/wallet.service';
-import { PinDialogComponent } from './pin-dialog.component';
-import { TransactionFormComponent } from '../../../shared/components/transaction-form/transaction-form.component';
+import { CurrencyXOFPipe } from '../../../shared/pipes/currency-xof.pipe';
+import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom-nav';
+import { SavingsDepositDialog } from './savings-deposit-dialog.component';
+import { SavingsWithdrawDialog } from './savings-withdraw-dialog.component';
+import { SavingsCreateDialog } from './savings-create-dialog.component';
 
 @Component({
   selector: 'app-savings-list',
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatMenuModule,
+    MatDividerModule,
+    MatTooltipModule,
     MatSnackBarModule,
     MatDialogModule,
-    TransactionFormComponent
+    CurrencyXOFPipe,
+    BottomNavComponent
   ],
-  template: `
-    <app-transaction-form 
-      title="Mon Épargne"
-      subtitle="Économiser pour le futur"
-      [balance]="walletBalance()"
-      [loading]="loading()"
-      (formSubmit)="onConfirm($event)">
-    </app-transaction-form>
-  `
+  templateUrl: './savings-list.html',
+  styleUrl: './savings-list.scss'
 })
 export class SavingsList implements OnInit {
   private readonly savingsService = inject(SavingsService);
   private readonly walletService = inject(WalletService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
-  private readonly router = inject(Router);
 
-  walletBalance = signal<number>(0);
-  loading = signal(false);
-  savingId = signal<string | null>(null);
+  // State
+  loading = signal(true);
+  walletBalance = signal(0);
+  savingsGoals = signal<SavingsGoal[]>([]);
+
+  // Computed
+  totalSavings = computed(() => 
+    this.savingsGoals().reduce((sum, goal) => sum + (goal.montantActuel || 0), 0)
+  );
 
   ngOnInit(): void {
     this.refreshData();
   }
 
-  refreshData() {
+  refreshData(): void {
     this.loading.set(true);
-    // 1. Get Wallet Balance
+
+    // Load wallet balance
     this.walletService.getWallet().subscribe({
-      next: (w) => this.walletBalance.set(w.solde),
-      error: () => this.snackBar.open('Impossible de récupérer le solde', 'OK', { duration: 3000 })
+      next: (wallet) => this.walletBalance.set(wallet.solde || 0),
+      error: () => this.snackBar.open('Erreur chargement solde', 'OK', { duration: 3000 })
     });
 
-    // 2. Get Single Savings Account (Singleton)
+    // Load savings goals
     this.savingsService.getSavings().subscribe({
-      next: (res) => {
-        if (res.tirelires && res.tirelires.length > 0) {
-          this.savingId.set(res.tirelires[0].id);
-          this.loading.set(false);
-        } else {
-          this.createDefaultSaving();
+      next: (response) => {
+        this.savingsGoals.set(response.tirelires || []);
+        this.loading.set(false);
+        
+        // If no savings goals, create a default one
+        if (response.tirelires.length === 0) {
+          this.createDefaultGoal();
         }
       },
       error: () => {
@@ -68,55 +88,124 @@ export class SavingsList implements OnInit {
     });
   }
 
-  createDefaultSaving() {
-    const defaultGoal = {
+  private createDefaultGoal(): void {
+    this.savingsService.createSaving({
       nom: 'Mon Épargne',
-      description: 'Compte Épargne Principal',
+      description: 'Compte épargne principal',
       icone: 'savings',
       couleur: '#ff9500'
-    };
-    this.savingsService.createSaving(defaultGoal).subscribe({
-      next: (res) => {
-        this.savingId.set(res.tirelire.id);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.snackBar.open('Erreur initialisation épargne', 'OK', { duration: 3000 });
-        this.loading.set(false);
+    }).subscribe({
+      next: (response) => {
+        this.savingsGoals.set([response.tirelire]);
       }
     });
   }
 
-  onConfirm(amount: number) {
-    if (amount > this.walletBalance()) {
-      this.snackBar.open('Solde insuffisant', 'OK', { duration: 3000 });
+  getProgress(goal: SavingsGoal): number {
+    if (!goal.objectifMontant || goal.objectifMontant === 0) return 0;
+    return Math.min(100, (goal.montantActuel / goal.objectifMontant) * 100);
+  }
+
+  getDaysLeft(goal: SavingsGoal): number {
+    if (!goal.dateObjectif) return 0;
+    const today = new Date();
+    const deadline = new Date(goal.dateObjectif);
+    const diff = deadline.getTime() - today.getTime();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }
+
+  openCreateGoal(): void {
+    const dialogRef = this.dialog.open(SavingsCreateDialog, {
+      width: '400px',
+      panelClass: 'custom-dialog'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loading.set(true);
+        this.savingsService.createSaving(result).subscribe({
+          next: () => {
+            this.snackBar.open('Objectif créé avec succès !', 'OK', { duration: 3000 });
+            this.refreshData();
+          },
+          error: (err) => {
+            this.snackBar.open(err.error?.message || 'Erreur création', 'OK', { duration: 3000 });
+            this.loading.set(false);
+          }
+        });
+      }
+    });
+  }
+
+  openDeposit(goal?: SavingsGoal): void {
+    const targetGoal = goal || this.savingsGoals()[0];
+    if (!targetGoal) return;
+
+    const dialogRef = this.dialog.open(SavingsDepositDialog, {
+      width: '400px',
+      data: { 
+        goal: targetGoal, 
+        maxAmount: this.walletBalance() 
+      },
+      panelClass: 'custom-dialog'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loading.set(true);
+        this.savingsService.depositToSaving(targetGoal.id, result.amount, result.pin).subscribe({
+          next: () => {
+            this.snackBar.open('Épargne créditée avec succès !', 'OK', { duration: 3000 });
+            this.refreshData();
+          },
+          error: (err) => {
+            this.snackBar.open(err.error?.message || 'Erreur lors du dépôt', 'OK', { duration: 4000 });
+            this.loading.set(false);
+          }
+        });
+      }
+    });
+  }
+
+  openWithdraw(goal?: SavingsGoal): void {
+    const targetGoal = goal || this.savingsGoals()[0];
+    if (!targetGoal || targetGoal.montantActuel === 0) return;
+
+    const dialogRef = this.dialog.open(SavingsWithdrawDialog, {
+      width: '400px',
+      data: { 
+        goal: targetGoal, 
+        maxAmount: targetGoal.montantActuel 
+      },
+      panelClass: 'custom-dialog'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loading.set(true);
+        this.savingsService.withdrawFromSaving(targetGoal.id, result.amount, result.pin).subscribe({
+          next: () => {
+            this.snackBar.open('Retrait effectué avec succès !', 'OK', { duration: 3000 });
+            this.refreshData();
+          },
+          error: (err) => {
+            this.snackBar.open(err.error?.message || 'Erreur lors du retrait', 'OK', { duration: 4000 });
+            this.loading.set(false);
+          }
+        });
+      }
+    });
+  }
+
+  editGoal(goal: SavingsGoal): void {
+    this.snackBar.open('Fonctionnalité à venir', 'OK', { duration: 2000 });
+  }
+
+  deleteGoal(goal: SavingsGoal): void {
+    if (goal.montantActuel > 0) {
+      this.snackBar.open('Veuillez d\'abord retirer le solde', 'OK', { duration: 3000 });
       return;
     }
-
-    const dialogRef = this.dialog.open(PinDialogComponent, { width: '300px' });
-
-    dialogRef.afterClosed().subscribe(pin => {
-      if (pin) {
-        this.deposit(amount, pin);
-      }
-    });
-  }
-
-  deposit(amount: number, pin: string) {
-    this.loading.set(true);
-    const id = this.savingId();
-    if (!id) return;
-
-    this.savingsService.depositToSaving(id, amount, pin).subscribe({
-      next: (res) => {
-        this.snackBar.open('Épargne créditée avec succès !', 'OK', { duration: 3000 });
-        this.refreshData(); // Refresh balance
-        setTimeout(() => this.router.navigate(['/dashboard']), 500);
-      },
-      error: (err) => {
-        this.snackBar.open(err.error?.message || 'Erreur lors du dépôt', 'OK', { duration: 4000 });
-        this.loading.set(false);
-      }
-    });
+    this.snackBar.open('Fonctionnalité à venir', 'OK', { duration: 2000 });
   }
 }

@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { WalletService } from '../../../core/services/wallet.service';
+import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom-nav';
 
 @Component({
     selector: 'app-change-pin',
@@ -22,7 +23,8 @@ import { WalletService } from '../../../core/services/wallet.service';
         MatInputModule,
         MatButtonModule,
         MatProgressSpinnerModule,
-        MatSnackBarModule
+        MatSnackBarModule,
+        BottomNavComponent
     ],
     templateUrl: './change-pin.component.html',
     styleUrls: ['./change-pin.component.scss']
@@ -45,7 +47,7 @@ export class ChangePinComponent {
         oldPin: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(6), Validators.pattern('^[0-9]*$')]],
         newPin: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(6), Validators.pattern('^[0-9]*$')]],
         confirmPin: ['', [Validators.required]]
-    }, { validators: this.pinMatchValidator });
+    }, { validators: this.pinMatchValidator.bind(this) });
 
     private pinMatchValidator(group: any) {
         const newPin = group.get('newPin')?.value;

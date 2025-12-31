@@ -1,47 +1,120 @@
+// Register Component Styles - Mobile Money App
+// Design moderne avec thème orange (cohérent avec login)
+
 .register-container {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: clamp(16px, 3vw, 28px);
-  background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: linear-gradient(145deg, #ff9500 0%, #ff6b00 50%, #e55c00 100%);
+  position: relative;
+  overflow: hidden;
+
+  // Animated background pattern
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 70%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 40%);
+    animation: float 15s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  // Floating circles decoration
+  &::after {
+    content: '';
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    bottom: -100px;
+    right: -100px;
+    pointer-events: none;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(-20px, -20px) rotate(5deg);
+  }
 }
 
 .register-card {
-  width: min(480px, 100%);
-  border-radius: 18px;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25),
+              0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.98) !important;
+  position: relative;
+  z-index: 1;
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(20px);
+  max-height: calc(100vh - 48px);
   display: flex;
   flex-direction: column;
-  max-height: min(92vh, 780px);
 }
 
-mat-card-header {
-  padding: 22px 22px 10px;
-  display: grid;
-  justify-items: center;
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Header section with logo
+.register-header {
   text-align: center;
-
-  mat-card-title {
-    display: inline-flex;
+  padding: 24px 32px 16px;
+  flex-shrink: 0;
+  
+  .logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+    display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 24px;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-    color: #ff9500;
-
-    .title-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
+    justify-content: center;
+    margin: 0 auto 12px;
+    box-shadow: 0 8px 24px rgba(255, 149, 0, 0.35);
+    
+    mat-icon {
+      font-size: 30px;
+      width: 30px;
+      height: 30px;
+      color: white;
     }
   }
 
-  mat-card-subtitle {
-    margin-top: 8px;
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 4px;
+    letter-spacing: -0.5px;
+  }
+
+  p {
     font-size: 13px;
-    color: rgba(0, 0, 0, 0.6);
+    color: #666;
+    margin: 0;
   }
 }
 
@@ -50,48 +123,87 @@ mat-card-header {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .form-scroll {
-  padding: 18px 22px 18px;
-  overflow: auto;
+  padding: 0 28px 20px;
+  overflow-y: auto;
   flex: 1;
   min-height: 0;
-  scrollbar-gutter: stable;
-  -webkit-overflow-scrolling: touch;
-}
+  scrollbar-width: thin;
+  scrollbar-color: #ff9500 #f0f0f0;
 
-.error-message {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(198, 40, 40, 0.1);
-  border: 1px solid rgba(198, 40, 40, 0.2);
-  color: #c62828;
-  padding: 12px 14px;
-  border-radius: 12px;
-  margin-bottom: 14px;
-  font-size: 13px;
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
 
-  mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
+  &::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #ff9500;
+    border-radius: 3px;
   }
 }
 
-.full-width {
-  width: 100%;
-  margin-bottom: 12px;
+// Error message
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+  color: #c62828;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid rgba(198, 40, 40, 0.15);
+  animation: shake 0.5s ease-in-out;
+
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
 }
 
-/* Pays + téléphone */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+// Form fields
+.full-width {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+// Name row
+.name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.name-field {
+  width: 100%;
+}
+
+// Phone row
 .phone-row {
   display: grid;
-  grid-template-columns: 170px 1fr;
+  grid-template-columns: 220px 1fr;
   gap: 12px;
   align-items: start;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
 
 .country-select,
@@ -99,125 +211,391 @@ mat-card-header {
   width: 100%;
 }
 
+// Country option styling - trigger display
+.country-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  
+  .country-flag {
+    font-size: 22px;
+    line-height: 1;
+  }
+  
+  .country-name {
+    flex: 1;
+    font-weight: 500;
+    font-size: 14px;
+  }
+  
+  .country-dial {
+    color: #ff9500;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
 .dial-prefix {
-  color: rgba(0, 0, 0, 0.72);
+  color: #ff9500;
   font-weight: 700;
 }
 
-/* Prénom + Nom */
-.name-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  align-items: start;
-  margin-bottom: 12px;
+// Material form field overrides
+::ng-deep {
+  .mat-mdc-form-field-subscript-wrapper {
+    margin-bottom: 4px;
+  }
+  
+  .mat-mdc-text-field-wrapper {
+    background: #f8f9fa !important;
+    border-radius: 12px !important;
+  }
+
+  .mdc-notched-outline__leading,
+  .mdc-notched-outline__notch,
+  .mdc-notched-outline__trailing {
+    border-color: #e0e0e0 !important;
+  }
+
+  .mat-mdc-form-field.mat-focused {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: #ff9500 !important;
+      border-width: 2px !important;
+    }
+  }
+
+  .mat-mdc-form-field-focus-overlay {
+    background: transparent !important;
+  }
+
+  // Fix floating labels visibility
+  .mdc-floating-label,
+  .mat-mdc-floating-label {
+    color: #666 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  
+  .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-floating-label {
+    color: #666 !important;
+  }
+
+  .mat-mdc-form-field.mat-focused .mdc-floating-label,
+  .mat-mdc-form-field.mat-focused .mat-mdc-floating-label {
+    color: #ff9500 !important;
+  }
+  
+  // Float above state
+  .mdc-floating-label--float-above {
+    background: white;
+    padding: 0 4px;
+    color: #ff9500 !important;
+  }
+  
+  // Ensure label text is visible
+  mat-label {
+    color: #666 !important;
+  }
+
+  .mat-mdc-select-arrow {
+    color: #666;
+  }
 }
 
-.name-field {
-  width: 100%;
-}
-
-/* Bloc PIN */
-.pin-box {
-  margin-top: 10px;
-  margin-bottom: 12px;
-  padding: 14px;
-  border-radius: 14px;
-  background: rgba(255, 149, 0, 0.08);
-  border: 1px solid rgba(255, 149, 0, 0.2);
-  display: grid;
-  gap: 12px;
-}
-
-.pin-info {
+// PIN info box
+.pin-info-box {
   display: flex;
   gap: 12px;
   align-items: flex-start;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%);
+  border: 1px solid rgba(255, 149, 0, 0.2);
+  border-radius: 12px;
+  margin: 16px 0;
 
   mat-icon {
     color: #ff9500;
-    margin-top: 2px;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  strong {
+    color: #1a1a2e;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
   }
 
   .muted {
-    margin-top: 4px;
-    color: rgba(0, 0, 0, 0.6);
+    color: #666;
     font-size: 12px;
   }
 }
 
-.pin-field {
-  width: 100%;
-}
-
+// Submit button
 .submit-btn {
-  height: 48px;
-  font-size: 15px;
-  font-weight: 800;
-  border-radius: 12px;
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(255, 149, 0, 0.4);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: none;
+  letter-spacing: 0.3px;
   margin-top: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover:not([disabled]) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 149, 0, 0.5);
+  }
+
+  &:active:not([disabled]) {
+    transform: translateY(0);
+  }
+
+  &[disabled] {
+    background: linear-gradient(135deg, #ccc 0%, #aaa 100%) !important;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
 
   mat-spinner {
     margin: 0 auto;
+    
+    ::ng-deep circle {
+      stroke: white !important;
+    }
   }
 }
 
-/* Lien bas */
-.login-link {
-  padding: 14px 22px 18px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+// Divider
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 28px;
+  flex-shrink: 0;
+  
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+  }
+
+  span {
+    padding: 0 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+}
+
+// Footer
+.auth-footer {
   text-align: center;
+  padding: 0 28px 24px;
+  flex-shrink: 0;
 
   p {
-    margin: 0;
-    color: rgba(0, 0, 0, 0.62);
-    font-size: 13px;
+    color: #666;
+    font-size: 14px;
+    margin: 0 0 12px;
+  }
 
-    a {
-      color: #ff9500;
-      text-decoration: none;
-      font-weight: 800;
+  .login-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    background: #f5f5f5;
+    color: #ff9500;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
     }
 
-    a:hover {
-      text-decoration: underline;
+    &:hover {
+      background: #fff5e6;
+      border-color: #ff9500;
+      transform: translateY(-1px);
     }
   }
 }
 
-/* Mobile */
-@media (max-width: 600px) {
-  .register-container {
-    place-items: start center;
-  }
-
-  .register-card {
-    max-height: 94vh;
-  }
-
-  mat-card-header {
-    padding: 18px 16px 10px;
-  }
-
-  .form-scroll {
-    padding: 16px;
-  }
-
-  .login-link {
-    padding: 12px 16px 16px;
-  }
-
-  .phone-row {
-    grid-template-columns: 1fr;
+// App info at bottom
+.app-info {
+  margin-top: 20px;
+  z-index: 1;
+  
+  span {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    font-weight: 500;
   }
 }
 
-/* ✅ Fix important : panel du mat-select opaque (plus de transparence) */
+// Country panel - Global styles
 :host ::ng-deep .country-panel.mat-mdc-select-panel {
   background: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
   border-radius: 12px;
-  max-height: 280px;
+  max-height: 320px;
   overflow: auto;
+  min-width: 280px !important;
+  
+  .mat-mdc-option {
+    padding: 12px 16px;
+    min-height: 48px;
+    
+    &:hover {
+      background: #fff5e6;
+    }
+    
+    &.mat-mdc-option-active {
+      background: #fff0d9;
+    }
+    
+    &.mdc-list-item--selected {
+      background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
+      
+      .country-dial {
+        color: #ff9500;
+        font-weight: 700;
+      }
+    }
+  }
+}
+
+// ===========================
+// RESPONSIVE STYLES
+// ===========================
+
+@media (max-width: 600px) {
+  .register-container {
+    padding: 16px;
+    justify-content: flex-start;
+    padding-top: 24px;
+  }
+
+  .register-card {
+    border-radius: 20px;
+    max-width: 100%;
+    max-height: calc(100vh - 48px);
+  }
+
+  .register-header {
+    padding: 24px 20px 16px;
+    
+    .logo {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      margin-bottom: 12px;
+      
+      mat-icon {
+        font-size: 30px;
+        width: 30px;
+        height: 30px;
+      }
+    }
+
+    h1 {
+      font-size: 22px;
+    }
+
+    p {
+      font-size: 13px;
+    }
+  }
+
+  .form-scroll {
+    padding: 0 20px 16px;
+  }
+
+  .name-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .phone-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .submit-btn {
+    height: 48px;
+    font-size: 15px;
+  }
+
+  .divider {
+    margin: 16px 20px;
+  }
+
+  .auth-footer {
+    padding: 0 20px 20px;
+  }
+}
+
+// Landscape mobile
+@media (max-height: 700px) {
+  .register-header {
+    padding: 20px 28px 12px;
+    
+    .logo {
+      width: 56px;
+      height: 56px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+  }
+
+  .form-scroll {
+    padding-bottom: 12px;
+  }
+
+  .pin-info-box {
+    padding: 10px 14px;
+    margin: 12px 0;
+  }
+
+  .divider {
+    margin: 12px 28px;
+  }
+
+  .auth-footer {
+    padding-bottom: 16px;
+  }
 }

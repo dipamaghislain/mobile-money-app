@@ -26,12 +26,13 @@ describe('POST /api/savings validations', () => {
   let token;
 
   beforeEach(async () => {
-    // register and login
+    // register and login with valid Burkina Faso phone format
     const reg = await request(app).post('/api/auth/register').send({
       nomComplet: 'Savings Tester',
-      telephone: '0650000001',
-      email: 'savings@test.local',
-      motDePasse: 'password123'
+      telephone: '70500001',  // Format BF: 8 chiffres
+      email: 'savings@test.com',  // Email valide
+      motDePasse: 'password123',
+      pays: 'BF'
     });
     token = reg.body.token;
   });

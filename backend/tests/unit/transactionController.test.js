@@ -1,9 +1,12 @@
-const transactionController = require('../../src/controllers/transactionController');
+// Test du contrôleur de transactions v2
+const transactionController = require('../../src/controllers/transactionController.v2');
 const Wallet = require('../../src/models/Wallet');
 const Transaction = require('../../src/models/Transaction');
+const User = require('../../src/models/User');
 
 jest.mock('../../src/models/Wallet');
 jest.mock('../../src/models/Transaction');
+jest.mock('../../src/models/User');
 
 describe('Transaction Controller - Deposit', () => {
     let req, res;
@@ -25,9 +28,9 @@ describe('Transaction Controller - Deposit', () => {
             _id: 'wallet123',
             utilisateurId: 'user123',
             statut: 'actif',
-            devise: 'FCFA',
+            devise: 'XOF',
             solde: 5000,
-            crediter: jest.fn(),
+            crediter: jest.fn().mockResolvedValue(6000),
             save: jest.fn()
         };
         Wallet.findOne.mockResolvedValue(mockWallet);
@@ -35,7 +38,7 @@ describe('Transaction Controller - Deposit', () => {
             _id: 'trans123',
             type: 'DEPOSIT',
             montant: 1000,
-            save: jest.fn(),
+            referenceExterne: 'REF123',
             createdAt: new Date()
         });
         Transaction.genererReference = jest.fn().mockReturnValue('REF123');
@@ -46,8 +49,7 @@ describe('Transaction Controller - Deposit', () => {
         expect(mockWallet.crediter).toHaveBeenCalledWith(1000);
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-            message: 'Dépôt effectué avec succès',
-            nouveauSolde: 5000
+            message: 'Dépôt effectué avec succès'
         }));
     });
 

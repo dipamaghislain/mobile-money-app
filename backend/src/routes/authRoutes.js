@@ -4,31 +4,29 @@ const express = require('express');
 const router = express.Router();
 
 const authController = require('../controllers/authController');
-const { protect, admin, merchant } = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 
-// Inscription
+// ============================================
+// ROUTES PUBLIQUES
+// ============================================
 router.post('/register', authController.register);
-
-// Connexion
 router.post('/login', authController.login);
-
-// Profil utilisateur connecté
-router.get('/me', protect, authController.getMe);
-
-// Mise à jour du profil
-router.put('/me', protect, authController.updateProfile);
-
-// Changement de mot de passe
-router.put('/change-password', protect, authController.changePassword);
-
-// Mot de passe oublié (public)
 router.post('/forgot-password', authController.forgotPassword);
-
-// Réinitialisation de mot de passe (public)
 router.post('/reset-password', authController.resetPassword);
 
-// (Exemples de routes protégées par rôle, si tu veux plus tard)
-// router.get('/admin-only', protect, admin, ...);
-// router.get('/merchant-only', protect, merchant, ...);
+// Liste des pays supportés (pour formulaire inscription)
+router.get('/countries', authController.getCountries);
+
+// ============================================
+// ROUTES PROTÉGÉES
+// ============================================
+router.get('/me', protect, authController.getMe);
+router.put('/me', protect, authController.updateProfile);
+router.put('/change-password', protect, authController.changePassword);
+
+// Configuration et gestion du PIN
+router.post('/setup-pin', protect, authController.setupPin);
+router.put('/change-pin', protect, authController.changePin);
+router.post('/verify-pin', protect, authController.verifyPin);
 
 module.exports = router;

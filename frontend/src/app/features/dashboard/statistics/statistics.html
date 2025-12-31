@@ -1,0 +1,109 @@
+<div class="statistics-container">
+    <mat-card class="stats-card">
+        <mat-card-header class="card-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <mat-icon>analytics</mat-icon>
+                </div>
+                <div>
+                    <mat-card-title>Statistiques</mat-card-title>
+                    <mat-card-subtitle>Analyse de vos transactions</mat-card-subtitle>
+                </div>
+            </div>
+            <div class="header-actions">
+                <mat-form-field appearance="outline" class="periode-select">
+                    <mat-select [(value)]="periode" (selectionChange)="onPeriodeChange()">
+                        @for (p of periodes; track p.value) {
+                            <mat-option [value]="p.value">{{ p.label }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+            </div>
+        </mat-card-header>
+
+        <mat-card-content>
+            @if (loading()) {
+                <div class="loading-container">
+                    <mat-spinner diameter="40"></mat-spinner>
+                    <p>Chargement des statistiques...</p>
+                </div>
+            } @else if (error()) {
+                <div class="error-container">
+                    <mat-icon>error_outline</mat-icon>
+                    <p>{{ error() }}</p>
+                    <button mat-flat-button color="primary" (click)="loadStatistics()">
+                        Réessayer
+                    </button>
+                </div>
+            } @else {
+                <!-- Summary Cards -->
+                <div class="summary-cards">
+                    <div class="summary-card balance">
+                        <div class="card-icon">
+                            <mat-icon>account_balance_wallet</mat-icon>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-label">Solde actuel</span>
+                            <span class="card-value">{{ formatAmount(soldeActuel()) }} {{ devise() }}</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-card income">
+                        <div class="card-icon">
+                            <mat-icon>arrow_downward</mat-icon>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-label">Total entrées</span>
+                            <span class="card-value positive">+{{ formatAmount(totalEntrees()) }} {{ devise() }}</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-card expense">
+                        <div class="card-icon">
+                            <mat-icon>arrow_upward</mat-icon>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-label">Total sorties</span>
+                            <span class="card-value negative">-{{ formatAmount(totalSorties()) }} {{ devise() }}</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-card transactions">
+                        <div class="card-icon">
+                            <mat-icon>receipt_long</mat-icon>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-label">Transactions</span>
+                            <span class="card-value">{{ nombreTransactions() }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line Chart -->
+                <div class="chart-section">
+                    <h3 class="chart-title">
+                        <mat-icon>show_chart</mat-icon>
+                        Évolution des flux
+                    </h3>
+                    <div class="chart-container line-chart">
+                        <canvas #lineChart></canvas>
+                    </div>
+                </div>
+
+                <!-- Doughnut Chart -->
+                <div class="chart-section">
+                    <h3 class="chart-title">
+                        <mat-icon>pie_chart</mat-icon>
+                        Répartition par type
+                    </h3>
+                    <div class="chart-container doughnut-chart">
+                        <canvas #doughnutChart></canvas>
+                    </div>
+                </div>
+            }
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Bottom Navigation -->
+    <app-bottom-nav></app-bottom-nav>
+</div>

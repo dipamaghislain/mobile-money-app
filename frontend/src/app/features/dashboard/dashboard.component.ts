@@ -17,6 +17,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { WalletService, WalletResponse, TransactionHistoryItem } from '../../core/services/wallet.service';
 import { TransactionService } from '../../core/services/transaction.service';
+import { BottomNavComponent } from '../../shared/components/bottom-nav/bottom-nav';
 import { amountValidator } from '../../core/validators/amount.validator';
 import {
   TRANSACTION_TYPES,
@@ -45,7 +46,8 @@ import { CurrencyXOFPipe } from '../../shared/pipes/currency-xof.pipe';
     MatInputModule,
     ReactiveFormsModule,
     DatePipe,
-    CurrencyXOFPipe
+    CurrencyXOFPipe,
+    BottomNavComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -456,7 +458,7 @@ export class DashboardComponent implements OnInit {
       justify-content: space-between;
       align-items: center;
       padding: 20px 24px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
       color: white;
     }
     .modal-header h2 {

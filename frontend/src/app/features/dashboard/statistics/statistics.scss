@@ -1,0 +1,268 @@
+@use '../../../variables' as vars;
+
+.statistics-container {
+  padding: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+  padding-bottom: 80px;
+}
+
+.stats-card {
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.25rem 1.25rem 0;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, vars.$primary-color, vars.$primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  mat-icon {
+    color: white;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+mat-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+mat-card-subtitle {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.header-actions {
+  .periode-select {
+    width: 180px;
+    
+    ::ng-deep {
+      .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+      .mat-mdc-text-field-wrapper {
+        padding: 0 0.75rem;
+      }
+    }
+  }
+}
+
+mat-card-content {
+  padding: 1.25rem;
+}
+
+// Loading & Error States
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #f44336;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: #666;
+    margin: 1rem 0;
+  }
+}
+
+// Summary Cards
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  .card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: white;
+    }
+  }
+  
+  .card-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    
+    .card-label {
+      font-size: 0.75rem;
+      color: #666;
+      margin-bottom: 0.25rem;
+    }
+    
+    .card-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      
+      &.positive {
+        color: #4CAF50;
+      }
+      
+      &.negative {
+        color: #F44336;
+      }
+    }
+  }
+  
+  &.balance .card-icon {
+    background: linear-gradient(135deg, vars.$primary-color, vars.$primary-dark);
+  }
+  
+  &.income .card-icon {
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+  }
+  
+  &.expense .card-icon {
+    background: linear-gradient(135deg, #F44336, #D32F2F);
+  }
+  
+  &.transactions .card-icon {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+  }
+}
+
+// Chart Sections
+.chart-section {
+  margin-bottom: 2rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.chart-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1rem;
+  
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: vars.$primary-color;
+  }
+}
+
+.chart-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid #eee;
+  
+  &.line-chart {
+    height: 280px;
+  }
+  
+  &.doughnut-chart {
+    height: 300px;
+  }
+  
+  canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+// Responsive
+@media (max-width: 480px) {
+  .statistics-container {
+    padding: 0.75rem;
+  }
+  
+  .card-header {
+    padding: 1rem 1rem 0;
+  }
+  
+  .header-actions {
+    width: 100%;
+    
+    .periode-select {
+      width: 100%;
+    }
+  }
+  
+  mat-card-content {
+    padding: 1rem;
+  }
+  
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-card {
+    .card-value {
+      font-size: 0.875rem;
+    }
+  }
+  
+  .chart-container {
+    &.line-chart {
+      height: 220px;
+    }
+    
+    &.doughnut-chart {
+      height: 250px;
+    }
+  }
+}

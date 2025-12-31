@@ -1,4 +1,4 @@
-﻿import { Component, DestroyRef, inject, signal } from '@angular/core';
+﻿import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -13,14 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
-export interface Country {
-  code: string;
-  name: string;
-  dial: string;
-  currency: string;
-  flag: string; // Emoji flag
-}
+import { Country } from '../../../core/models/country.model';
 
 @Component({
   selector: 'app-register',
@@ -41,7 +34,7 @@ export interface Country {
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private destroyRef = inject(DestroyRef);
@@ -53,38 +46,14 @@ export class RegisterComponent {
 
   hidePassword = true;
   hideConfirmPassword = true;
-  hidePin = true;
-  hideConfirmPin = true;
 
-  // Liste complète des pays (échantillon représentatif pour l'exemple, extensible)
-  countries: Country[] = [
-    { code: 'BF', name: 'Burkina Faso', dial: '226', currency: 'XOF', flag: '🇧🇫' },
-    { code: 'CI', name: "Côte d'Ivoire", dial: '225', currency: 'XOF', flag: '🇨🇮' },
-    { code: 'SN', name: 'Sénégal', dial: '221', currency: 'XOF', flag: '🇸🇳' },
-    { code: 'ML', name: 'Mali', dial: '223', currency: 'XOF', flag: '🇲🇱' },
-    { code: 'NE', name: 'Niger', dial: '227', currency: 'XOF', flag: '🇳🇪' },
-    { code: 'TG', name: 'Togo', dial: '228', currency: 'XOF', flag: '🇹🇬' },
-    { code: 'BJ', name: 'Bénin', dial: '229', currency: 'XOF', flag: '🇧🇯' },
-    { code: 'FR', name: 'France', dial: '33', currency: 'EUR', flag: '🇫🇷' },
-    { code: 'US', name: 'États-Unis', dial: '1', currency: 'USD', flag: '🇺🇸' },
-    { code: 'CA', name: 'Canada', dial: '1', currency: 'CAD', flag: '🇨🇦' },
-    { code: 'GB', name: 'Royaume-Uni', dial: '44', currency: 'GBP', flag: '🇬🇧' },
-    { code: 'DE', name: 'Allemagne', dial: '49', currency: 'EUR', flag: '🇩🇪' },
-    { code: 'CM', name: 'Cameroun', dial: '237', currency: 'XAF', flag: '🇨🇲' },
-    { code: 'GA', name: 'Gabon', dial: '241', currency: 'XAF', flag: '🇬🇦' },
-    { code: 'CG', name: 'Congo-Brazzaville', dial: '242', currency: 'XAF', flag: '🇨🇬' },
-    { code: 'CD', name: 'RDC', dial: '243', currency: 'CDF', flag: '🇨🇩' },
-    { code: 'MA', name: 'Maroc', dial: '212', currency: 'MAD', flag: '🇲🇦' },
-    { code: 'DZ', name: 'Algérie', dial: '213', currency: 'DZD', flag: '🇩🇿' },
-    { code: 'TN', name: 'Tunisie', dial: '216', currency: 'TND', flag: '🇹🇳' },
-    { code: 'CN', name: 'Chine', dial: '86', currency: 'CNY', flag: '🇨🇳' },
-    { code: 'JP', name: 'Japon', dial: '81', currency: 'JPY', flag: '🇯🇵' },
-    { code: 'IN', name: 'Inde', dial: '91', currency: 'INR', flag: '🇮🇳' },
-    { code: 'NG', name: 'Nigeria', dial: '234', currency: 'NGN', flag: '🇳🇬' },
-    { code: 'GH', name: 'Ghana', dial: '233', currency: 'GHS', flag: '🇬🇭' },
-    { code: 'KE', name: 'Kenya', dial: '254', currency: 'KES', flag: '🇰🇪' },
-    { code: 'ZA', name: 'Afrique du Sud', dial: '27', currency: 'ZAR', flag: '🇿🇦' },
-  ];
+  // Pays chargés depuis le serveur
+  countries = signal<Country[]>([]);
+  defaultCountry = signal<string>('BF');
+  loadingCountries = signal(true);
+
+  // Gestion du téléphone
+  phoneError = '';
 
   form = this.fb.nonNullable.group(
     {
@@ -92,39 +61,90 @@ export class RegisterComponent {
       nom: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       country: ['BF', [Validators.required]],
-      phone: ['', [Validators.required, this.digitsOnlyValidator, this.phoneByCountryValidator.bind(this)]],
+      phone: ['', [Validators.required]],
       accountType: ['client', [Validators.required]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
-      pin: ['', [Validators.required, this.digitsOnlyValidator, this.pinLengthValidator]],
-      confirmPin: ['', [Validators.required]],
     },
-    { validators: [this.passwordMatchValidator, this.pinMatchValidator] }
+    { validators: [this.passwordMatchValidator.bind(this)] }
   );
 
   get selectedCountry(): Country | undefined {
-    return this.countries.find(c => c.code === this.form.controls.country.value);
+    return this.countries().find(c => c.code === this.form.controls.country.value);
   }
 
   get phonePlaceholder(): string {
-    return 'Ex: 70123456';
+    return this.selectedCountry?.formatTelephone?.exemple ?? '';
   }
 
   get phoneHint(): string {
-    return 'Sans l\'indicatif';
+    const country = this.selectedCountry;
+    if (!country) return '';
+    return `${country.formatTelephone?.description ?? ''} (${country.indicatif})`;
   }
 
-  constructor() {
-    // Trier les pays par nom
-    this.countries.sort((a, b) => a.name.localeCompare(b.name));
+  // Extraire le nombre de chiffres requis depuis formatTelephone
+  get requiredPhoneLength(): number {
+    const country = this.selectedCountry;
+    if (!country) return 8;
+    return country.formatTelephone?.longueur ?? 8;
+  }
 
-    // Quand le pays change, on reset le numéro et on revalide
+  ngOnInit(): void {
+    // Charger les pays depuis le serveur
+    this.auth.getCountries().subscribe({
+      next: (res) => {
+        this.countries.set(res.countries);
+        this.defaultCountry.set(res.default);
+        this.form.controls.country.setValue(res.default);
+        this.loadingCountries.set(false);
+      },
+      error: (err) => {
+        console.error('Erreur chargement pays:', err);
+        // Fallback avec pays par défaut
+        this.countries.set([
+          { code: 'BF', nom: 'Burkina Faso', indicatif: '+226', devise: 'XOF', symbole: 'FCFA', formatTelephone: { longueur: 8, exemple: '70123456', description: '8 chiffres' } },
+          { code: 'CI', nom: "Côte d'Ivoire", indicatif: '+225', devise: 'XOF', symbole: 'FCFA', formatTelephone: { longueur: 10, exemple: '0701234567', description: '10 chiffres' } },
+          { code: 'SN', nom: 'Sénégal', indicatif: '+221', devise: 'XOF', symbole: 'FCFA', formatTelephone: { longueur: 9, exemple: '771234567', description: '9 chiffres' } },
+          { code: 'ML', nom: 'Mali', indicatif: '+223', devise: 'XOF', symbole: 'FCFA', formatTelephone: { longueur: 8, exemple: '70123456', description: '8 chiffres' } },
+          { code: 'CM', nom: 'Cameroun', indicatif: '+237', devise: 'XAF', symbole: 'FCFA', formatTelephone: { longueur: 9, exemple: '690123456', description: '9 chiffres' } },
+        ]);
+        this.loadingCountries.set(false);
+      }
+    });
+
+    // Quand le pays change, on reset le numéro
     this.form.controls.country.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
+        this.phoneError = '';
         this.form.controls.phone.setValue('');
-        this.form.controls.phone.updateValueAndValidity();
       });
+
+    // Écouter les changements du téléphone pour filtrer les chiffres
+    this.form.controls.phone.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        const digits = value.replace(/\D/g, '');
+        if (digits !== value) {
+          this.form.controls.phone.setValue(digits, { emitEvent: false });
+        }
+        this.validatePhone(digits);
+      });
+  }
+
+  // Validation du téléphone
+  validatePhone(digits: string): void {
+    const requiredLength = this.requiredPhoneLength;
+    if (digits.length === 0) {
+      this.phoneError = 'Numéro requis';
+    } else if (digits.length < requiredLength) {
+      this.phoneError = `Le numéro doit contenir ${requiredLength} chiffres`;
+    } else if (digits.length > requiredLength) {
+      this.phoneError = `Maximum ${requiredLength} chiffres`;
+    } else {
+      this.phoneError = '';
+    }
   }
 
   showError(controlName: string, error: string): boolean {
@@ -132,31 +152,23 @@ export class RegisterComponent {
     return !!c && (c.touched || c.dirty) && c.hasError(error);
   }
 
+  // Convertir code pays en emoji drapeau
+  getCountryFlag(code: string): string {
+    const flags: Record<string, string> = {
+      'BF': '🇧🇫',
+      'CI': '🇨🇮',
+      'SN': '🇸🇳',
+      'ML': '🇲🇱',
+      'CM': '🇨🇲',
+      'TG': '🇹🇬',
+      'BJ': '🇧🇯',
+      'GH': '🇬🇭',
+      'NE': '🇳🇪'
+    };
+    return flags[code] || '🌍';
+  }
+
   // ---- Validators ----
-
-  private digitsOnlyValidator(control: AbstractControl): ValidationErrors | null {
-    const v = String(control.value ?? '');
-    if (!v) return null;
-    return /^\d+$/.test(v) ? null : { digitsOnly: true };
-  }
-
-  private pinLengthValidator(control: AbstractControl): ValidationErrors | null {
-    const v = String(control.value ?? '');
-    if (!v) return null;
-    return v.length >= 4 && v.length <= 6 ? null : { pinLength: true };
-  }
-
-  private phoneByCountryValidator(control: AbstractControl): ValidationErrors | null {
-    const phone = String(control.value ?? '');
-    if (!phone) return null;
-
-    // Validation souple : entre 7 et 15 chiffres (standard E.164 sans le +)
-    if (phone.length < 7 || phone.length > 15) {
-      return { invalidPhone: true };
-    }
-
-    return null;
-  }
 
   private passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
     const p = group.get('password')?.value;
@@ -165,23 +177,33 @@ export class RegisterComponent {
     return p === c ? null : { passwordMismatch: true };
   }
 
-  private pinMatchValidator(group: AbstractControl): ValidationErrors | null {
-    const p = group.get('pin')?.value;
-    const c = group.get('confirmPin')?.value;
-    if (!p || !c) return null;
-    return p === c ? null : { pinMismatch: true };
-  }
-
   // ---- Submit ----
 
   buildE164(): string {
-    const dial = this.selectedCountry?.dial ?? '';
+    const country = this.selectedCountry;
     const phone = this.form.controls.phone.value;
-    return `+${dial}${phone}`;
+    if (!country) return phone;
+    return country.indicatif + phone;
   }
 
   onSubmit(): void {
     this.serverError = '';
+
+    // Valider le téléphone
+    const phone = this.form.controls.phone.value;
+    const requiredLength = this.requiredPhoneLength;
+    
+    if (!phone || phone.length === 0) {
+      this.phoneError = 'Numéro requis';
+      this.form.controls.phone.markAsTouched();
+      return;
+    }
+    
+    if (phone.length !== requiredLength) {
+      this.phoneError = `Le numéro doit contenir exactement ${requiredLength} chiffres`;
+      this.form.controls.phone.markAsTouched();
+      return;
+    }
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -196,30 +218,24 @@ export class RegisterComponent {
       email: this.form.controls.email.value.trim().toLowerCase(),
       motDePasse: this.form.controls.password.value,
       telephone: this.buildE164(),
+      pays: this.form.controls.country.value,
       role: this.form.controls.accountType.value as 'client' | 'marchand',
-      pin: this.form.controls.pin.value,
-      devise: this.selectedCountry?.currency || 'XOF'
     };
-
-    /**
-     * Note: Le backend a été mis à jour pour accepter 'devise' dans la payload d'inscription.
-     * Le modèle Wallet accepte désormais n'importe quel code devise à 3 lettres.
-     */
 
     this.auth.register(payload).pipe(
       finalize(() => {
         this.submitting = false;
         this.form.enable();
-      }),
-      takeUntilDestroyed(this.destroyRef)
+      })
     ).subscribe({
-      next: () => {
-        this.snackBar.open(`Compte créé avec succès (${payload.devise})`, 'OK', { duration: 3000 });
+      next: (res) => {
+        this.snackBar.open('Compte créé avec succès ! Connectez-vous pour continuer.', 'OK', { duration: 3000 });
+        // Rediriger vers la page de connexion
         this.router.navigate(['/auth/login']);
       },
-      error: (err: any) => {
-        this.serverError = err?.error?.message || err?.message || 'Erreur lors de l\'inscription';
-        this.snackBar.open(this.serverError, 'OK', { duration: 5000, panelClass: ['error-snackbar'] });
+      error: (err) => {
+        this.serverError = err?.message || 'Erreur lors de l\'inscription';
+        this.snackBar.open(this.serverError, 'OK', { duration: 3000 });
       }
     });
   }

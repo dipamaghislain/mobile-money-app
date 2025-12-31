@@ -119,5 +119,36 @@ export class AdminUserDetailComponent implements OnInit {
       default: return 'role-client';
     }
   }
+
+  getRoleLabel(role: string): string {
+    switch (role) {
+      case 'admin': return 'Administrateur';
+      case 'marchand': return 'Marchand';
+      default: return 'Client';
+    }
+  }
+
+  getAvatarColor(name: string): string {
+    const colors = [
+      '#6366f1', '#8b5cf6', '#ec4899', '#ef4444',
+      '#f59e0b', '#10b981', '#3b82f6', '#06b6d4'
+    ];
+    const index = name ? name.charCodeAt(0) % colors.length : 0;
+    return colors[index];
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return parts[0].charAt(0) + parts[1].charAt(0);
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text);
+    this.snackBar.open('Copié dans le presse-papiers', 'OK', { duration: 2000 });
+  }
 }
 

@@ -1,203 +1,235 @@
 <!-- frontend/src/app/features/admin/admin-transactions/admin-transactions.component.html -->
-<div class="admin-transactions">
-  <!-- Header -->
+<div class="transactions-page">
+  <!-- Page Navigation -->
+  <div class="page-nav">
+    <button mat-button class="back-btn" routerLink="/admin">
+      <mat-icon>arrow_back</mat-icon>
+      <span>Retour au dashboard</span>
+    </button>
+    <div class="breadcrumb">
+      <a routerLink="/admin">Dashboard</a>
+      <mat-icon>chevron_right</mat-icon>
+      <span>Transactions</span>
+    </div>
+  </div>
+
+  <!-- Page Header -->
   <div class="page-header">
     <div class="header-content">
-      <a mat-icon-button routerLink="/admin" class="back-btn">
-        <mat-icon>arrow_back</mat-icon>
-      </a>
-      <div>
-        <h1>Historique des transactions</h1>
-        <p>{{ total() }} transactions au total</p>
-      </div>
+      <h1>Historique des transactions</h1>
+      <p>{{ total() | number }} transactions au total</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="exportData()">
+      <mat-icon>download</mat-icon>
+      Exporter
+    </button>
+  </div>
+
+  <!-- Stats Pills -->
+  <div class="stats-row">
+    <div class="stat-pill success">
+      <mat-icon>check_circle</mat-icon>
+      <span class="stat-value">{{ getStatusCount('SUCCES') }}</span>
+      <span class="stat-label">Réussies</span>
+    </div>
+    <div class="stat-pill pending">
+      <mat-icon>schedule</mat-icon>
+      <span class="stat-value">{{ getStatusCount('EN_ATTENTE') }}</span>
+      <span class="stat-label">En attente</span>
+    </div>
+    <div class="stat-pill error">
+      <mat-icon>error</mat-icon>
+      <span class="stat-value">{{ getStatusCount('ECHEC') }}</span>
+      <span class="stat-label">Échouées</span>
     </div>
   </div>
 
   <!-- Filters -->
-  <mat-card class="filters-card">
-    <mat-expansion-panel>
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon>filter_list</mat-icon>
-          Filtres
-        </mat-panel-title>
-        <mat-panel-description>
-          Affiner la recherche
-        </mat-panel-description>
-      </mat-expansion-panel-header>
-
-      <div class="filters-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Type</mat-label>
-          <mat-select [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event); onFilterChange()">
-            @for (type of transactionTypes; track type.value) {
-              <mat-option [value]="type.value">{{ type.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Statut</mat-label>
-          <mat-select [ngModel]="statutFilter()" (ngModelChange)="statutFilter.set($event); onFilterChange()">
-            <mat-option value="">Tous</mat-option>
-            <mat-option value="SUCCES">Réussi</mat-option>
-            <mat-option value="ECHEC">Échoué</mat-option>
-            <mat-option value="EN_ATTENTE">En attente</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Téléphone</mat-label>
-          <input matInput 
-                 [ngModel]="telephoneFilter()" 
-                 (ngModelChange)="telephoneFilter.set($event)"
-                 (blur)="onFilterChange()"
-                 placeholder="Filtrer par téléphone">
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Date début</mat-label>
-          <input matInput [matDatepicker]="startPicker" 
-                 [ngModel]="startDate()" 
-                 (ngModelChange)="startDate.set($event); onFilterChange()">
-          <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-          <mat-datepicker #startPicker></mat-datepicker>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Date fin</mat-label>
-          <input matInput [matDatepicker]="endPicker" 
-                 [ngModel]="endDate()" 
-                 (ngModelChange)="endDate.set($event); onFilterChange()">
-          <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-          <mat-datepicker #endPicker></mat-datepicker>
-        </mat-form-field>
-
-        <button mat-stroked-button (click)="clearFilters()" class="clear-btn">
+  <div class="filters-card">
+    <div class="filters-header">
+      <div class="filters-title">
+        <mat-icon>filter_list</mat-icon>
+        <span>Filtres</span>
+      </div>
+      @if (hasActiveFilters()) {
+        <button mat-button color="primary" (click)="clearFilters()">
           <mat-icon>clear</mat-icon>
           Réinitialiser
         </button>
-      </div>
-    </mat-expansion-panel>
-  </mat-card>
+      }
+    </div>
+    
+    <div class="filters-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Type de transaction</mat-label>
+        <mat-select [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event); onFilterChange()">
+          @for (type of transactionTypes; track type.value) {
+            <mat-option [value]="type.value">{{ type.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Statut</mat-label>
+        <mat-select [ngModel]="statutFilter()" (ngModelChange)="statutFilter.set($event); onFilterChange()">
+          <mat-option value="">Tous les statuts</mat-option>
+          <mat-option value="SUCCES">Réussi</mat-option>
+          <mat-option value="ECHEC">Échoué</mat-option>
+          <mat-option value="EN_ATTENTE">En attente</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Téléphone</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput 
+               [ngModel]="telephoneFilter()" 
+               (ngModelChange)="telephoneFilter.set($event)"
+               (blur)="onFilterChange()"
+               placeholder="Rechercher...">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Date début</mat-label>
+        <input matInput [matDatepicker]="startPicker" 
+               [ngModel]="startDate()" 
+               (ngModelChange)="startDate.set($event); onFilterChange()">
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Date fin</mat-label>
+        <input matInput [matDatepicker]="endPicker" 
+               [ngModel]="endDate()" 
+               (ngModelChange)="endDate.set($event); onFilterChange()">
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+  </div>
 
   <!-- Loading -->
   @if (loading()) {
-    <div class="loading-container">
-      <mat-spinner diameter="40"></mat-spinner>
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des transactions...</p>
     </div>
   }
 
   <!-- Error -->
   @if (error()) {
-    <mat-card class="error-card">
-      <mat-card-content>
-        <mat-icon>error</mat-icon>
-        <p>{{ error() }}</p>
-        <button mat-button color="primary" (click)="loadTransactions()">Réessayer</button>
-      </mat-card-content>
-    </mat-card>
+    <div class="error-state">
+      <mat-icon>error_outline</mat-icon>
+      <h3>Erreur de chargement</h3>
+      <p>{{ error() }}</p>
+      <button mat-raised-button color="primary" (click)="loadTransactions()">
+        <mat-icon>refresh</mat-icon>
+        Réessayer
+      </button>
+    </div>
   }
 
-  <!-- Table -->
+  <!-- Transactions Table -->
   @if (!loading() && !error()) {
-    <mat-card class="table-card">
-      <table mat-table [dataSource]="transactions()" class="transactions-table">
-        <!-- Date Column -->
-        <ng-container matColumnDef="date">
-          <th mat-header-cell *matHeaderCellDef>Date</th>
-          <td mat-cell *matCellDef="let tx">
-            <div class="date-cell">
-              <span class="date">{{ tx.dateCreation | date:'dd/MM/yyyy' }}</span>
-              <span class="time">{{ tx.dateCreation | date:'HH:mm' }}</span>
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Type Column -->
-        <ng-container matColumnDef="type">
-          <th mat-header-cell *matHeaderCellDef>Type</th>
-          <td mat-cell *matCellDef="let tx">
-            <div class="type-cell" [class]="getTypeClass(tx.type)">
-              <mat-icon>{{ getTypeIcon(tx.type) }}</mat-icon>
-              <span>{{ getTypeLabel(tx.type) }}</span>
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Source Column -->
-        <ng-container matColumnDef="source">
-          <th mat-header-cell *matHeaderCellDef>Source</th>
-          <td mat-cell *matCellDef="let tx">
-            @if (tx.utilisateurSourceId) {
-              <div class="user-cell">
-                <span class="user-name">{{ tx.utilisateurSourceId.nomComplet }}</span>
-                <span class="user-phone">{{ tx.utilisateurSourceId.telephone }}</span>
+    <div class="table-card">
+      @if (transactions().length > 0) {
+        <table mat-table [dataSource]="transactions()" class="transactions-table">
+          <!-- Date Column -->
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let tx">
+              <div class="date-cell">
+                <span class="date">{{ tx.dateCreation | date:'dd/MM/yyyy' }}</span>
+                <span class="time">{{ tx.dateCreation | date:'HH:mm' }}</span>
               </div>
-            } @else {
-              <span class="na">-</span>
-            }
-          </td>
-        </ng-container>
+            </td>
+          </ng-container>
 
-        <!-- Destination Column -->
-        <ng-container matColumnDef="destination">
-          <th mat-header-cell *matHeaderCellDef>Destination</th>
-          <td mat-cell *matCellDef="let tx">
-            @if (tx.utilisateurDestinationId) {
-              <div class="user-cell">
-                <span class="user-name">{{ tx.utilisateurDestinationId.nomComplet }}</span>
-                <span class="user-phone">{{ tx.utilisateurDestinationId.telephone }}</span>
+          <!-- Type Column -->
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let tx">
+              <div class="type-cell">
+                <div class="type-icon" [class]="tx.type.toLowerCase()">
+                  <mat-icon>{{ getTransactionIcon(tx.type) }}</mat-icon>
+                </div>
+                <span>{{ getTransactionLabel(tx.type) }}</span>
               </div>
-            } @else {
-              <span class="na">-</span>
-            }
-          </td>
-        </ng-container>
+            </td>
+          </ng-container>
 
-        <!-- Montant Column -->
-        <ng-container matColumnDef="montant">
-          <th mat-header-cell *matHeaderCellDef>Montant</th>
-          <td mat-cell *matCellDef="let tx">
-            <span class="amount">{{ tx.montant | currency:tx.devise:'symbol':'1.0-0' }}</span>
-          </td>
-        </ng-container>
+          <!-- Source Column -->
+          <ng-container matColumnDef="source">
+            <th mat-header-cell *matHeaderCellDef>Source</th>
+            <td mat-cell *matCellDef="let tx">
+              @if (tx.expediteur) {
+                <a [routerLink]="['/admin/users', tx.expediteur._id]" class="user-link">
+                  {{ tx.expediteur.telephone }}
+                </a>
+              } @else {
+                <span class="na">-</span>
+              }
+            </td>
+          </ng-container>
 
-        <!-- Statut Column -->
-        <ng-container matColumnDef="statut">
-          <th mat-header-cell *matHeaderCellDef>Statut</th>
-          <td mat-cell *matCellDef="let tx">
-            <mat-chip [class]="getStatusClass(tx.statut)">
-              {{ getStatusLabel(tx.statut) }}
-            </mat-chip>
-            @if (tx.messageErreur) {
-              <mat-icon class="error-icon" [matTooltip]="tx.messageErreur">info</mat-icon>
-            }
-          </td>
-        </ng-container>
+          <!-- Destination Column -->
+          <ng-container matColumnDef="destination">
+            <th mat-header-cell *matHeaderCellDef>Destination</th>
+            <td mat-cell *matCellDef="let tx">
+              @if (tx.destinataire) {
+                <a [routerLink]="['/admin/users', tx.destinataire._id]" class="user-link">
+                  {{ tx.destinataire.telephone }}
+                </a>
+              } @else {
+                <span class="na">-</span>
+              }
+            </td>
+          </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
+          <!-- Montant Column -->
+          <ng-container matColumnDef="montant">
+            <th mat-header-cell *matHeaderCellDef>Montant</th>
+            <td mat-cell *matCellDef="let tx">
+              <span class="amount" [class]="tx.type === 'DEPOSIT' ? 'credit' : 'debit'">
+                {{ tx.type === 'DEPOSIT' ? '+' : '' }}{{ tx.montant | number:'1.0-0' }} {{ tx.devise }}
+              </span>
+            </td>
+          </ng-container>
 
-      <!-- Empty State -->
-      @if (transactions().length === 0) {
+          <!-- Statut Column -->
+          <ng-container matColumnDef="statut">
+            <th mat-header-cell *matHeaderCellDef>Statut</th>
+            <td mat-cell *matCellDef="let tx">
+              <span class="status-badge" [class]="tx.statut.toLowerCase()">
+                <mat-icon>{{ getStatusIcon(tx.statut) }}</mat-icon>
+                {{ getStatusLabel(tx.statut) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
+              [class.failed]="row.statut === 'ECHEC'"></tr>
+        </table>
+
+        <!-- Pagination -->
+        <mat-paginator 
+          [length]="total()"
+          [pageSize]="pageSize()"
+          [pageIndex]="pageIndex()"
+          [pageSizeOptions]="[10, 25, 50, 100]"
+          (page)="onPageChange($event)"
+          showFirstLastButtons>
+        </mat-paginator>
+      } @else {
         <div class="empty-state">
           <mat-icon>receipt_long</mat-icon>
-          <p>Aucune transaction trouvée</p>
+          <h3>Aucune transaction trouvée</h3>
+          <p>Modifiez vos filtres ou effectuez une nouvelle recherche</p>
         </div>
       }
-
-      <!-- Paginator -->
-      <mat-paginator
-        [length]="total()"
-        [pageSize]="pageSize()"
-        [pageIndex]="pageIndex()"
-        [pageSizeOptions]="[10, 25, 50, 100]"
-        (page)="onPageChange($event)"
-        showFirstLastButtons>
-      </mat-paginator>
-    </mat-card>
+    </div>
   }
 </div>
 

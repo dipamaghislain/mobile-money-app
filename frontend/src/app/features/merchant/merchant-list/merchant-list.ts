@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom-nav';
 
 interface Merchant {
   id: number;
@@ -15,7 +16,7 @@ interface Merchant {
 @Component({
   selector: 'app-merchant-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatIconModule, MatButtonModule],
+  imports: [CommonModule, RouterModule, MatIconModule, MatButtonModule, BottomNavComponent],
   templateUrl: './merchant-list.html',
   styleUrl: './merchant-list.scss',
 })

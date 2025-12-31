@@ -1,81 +1,104 @@
-@import '../../dashboard/dashboard.component.scss'; // Reuse dashboard variables if possible
-
 .profile-container {
   min-height: 100vh;
-  background-color: #f8f9fa;
-  padding-bottom: 80px; // Space for bottom nav
+  background: linear-gradient(145deg, #f5f7fa 0%, #e8ecf1 100%);
+  padding-bottom: 90px;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  // Conteneur principal centré
+  > * {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  // Hero pleine largeur
+  > .gradient-hero {
+    max-width: 100%;
+  }
+
+  // Bottom nav pleine largeur
+  > .bottom-nav {
+    max-width: 100%;
+  }
+
+  @media (min-width: 600px) {
+    padding-top: 0;
+  }
 }
 
-// Hero Section
+// ===== HERO SECTION =====
 .gradient-hero {
   background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
   color: white;
-  padding: 24px 24px 80px; // Extra padding bottom for overlap
+  padding: 20px 20px 100px;
   border-bottom-left-radius: 32px;
   border-bottom-right-radius: 32px;
   position: relative;
   overflow: hidden;
 
-  // Decorative circles
   &::before,
   &::after {
     content: '';
     position: absolute;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
   }
 
   &::before {
     width: 200px;
     height: 200px;
-    top: -50px;
-    right: -50px;
+    top: -60px;
+    right: -60px;
   }
 
   &::after {
     width: 150px;
     height: 150px;
-    bottom: -30px;
-    left: -30px;
+    bottom: 20px;
+    left: -40px;
   }
 }
 
 .header-nav {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 32px;
+  justify-content: space-between;
+  margin-bottom: 24px;
   position: relative;
   z-index: 10;
 
-  .back-btn {
+  .back-btn,
+  .edit-btn {
     background: rgba(255, 255, 255, 0.2);
     border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
 
     &:hover {
       background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
     }
 
     mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
     }
   }
 
   h1 {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 600;
     margin: 0;
   }
 }
@@ -92,41 +115,85 @@
     position: relative;
 
     .avatar {
-      width: 96px;
-      height: 96px;
+      width: 100px;
+      height: 100px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      border: 4px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.25);
+      border: 4px solid rgba(255, 255, 255, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 
       span {
-        font-size: 32px;
+        font-size: 36px;
         font-weight: 700;
         color: white;
-        letter-spacing: 1px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+    }
+
+    .verified-badge {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 28px;
+      height: 28px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: #4caf50;
       }
     }
   }
 
   h2 {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 700;
-    margin: 0 0 4px;
+    margin: 0 0 6px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 
   .phone-number {
     font-size: 14px;
     opacity: 0.9;
     letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  .role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+
+    &.marchand {
+      background: rgba(76, 175, 80, 0.3);
+    }
+
+    &.admin {
+      background: rgba(156, 39, 176, 0.3);
+    }
   }
 }
 
-// Content Layout
+// ===== CONTENT SECTION =====
 .content-wrapper {
-  padding: 0 20px;
-  margin-top: -40px; // Overlap hero 
+  padding: 0 16px;
+  margin-top: -50px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -134,49 +201,119 @@
   z-index: 20;
 }
 
+// ===== STATS GRID =====
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  .stat-card {
+    background: white !important;
+    border-radius: 20px !important;
+    padding: 20px 16px !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+    border: none !important;
+
+    .stat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+
+    &.balance-stat {
+      .stat-icon {
+        color: #ff9500;
+      }
+    }
+
+    &.savings-stat {
+      .stat-icon {
+        color: #4caf50;
+      }
+    }
+
+    .stat-info {
+      flex: 1;
+
+      .stat-value {
+        font-size: 16px;
+        font-weight: 800;
+        color: #1a1a1a;
+        line-height: 1.2;
+
+        small {
+          font-size: 11px;
+          font-weight: 600;
+          color: #666;
+        }
+      }
+
+      .stat-label {
+        font-size: 11px;
+        color: #888;
+        margin-top: 2px;
+      }
+    }
+  }
+}
+
+// ===== INFO CARD =====
 mat-card {
-  border-radius: 20px !important; // Override material
+  border-radius: 20px !important;
   border: none !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-  background: white;
-  padding: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+  background: white !important;
+  padding: 0 !important;
   overflow: hidden;
 }
 
-// Personal Info Card
 .info-card {
-  padding: 24px;
+  padding: 20px !important;
 
   .card-header-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 10px;
     margin-bottom: 20px;
 
     h3 {
       margin: 0;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        color: #ff9500;
+      }
     }
   }
 
   .info-list {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
   }
 
   .info-item {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
 
     .icon-box {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
       border-radius: 12px;
-      background: rgba(255, 149, 0, 0.1);
+      background: linear-gradient(135deg, rgba(255, 149, 0, 0.1) 0%, rgba(255, 107, 0, 0.1) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -191,59 +328,68 @@ mat-card {
 
     .info-text {
       flex: 1;
+      min-width: 0;
 
       .label {
         display: block;
-        font-size: 12px;
-        color: #666;
-        margin-bottom: 2px;
+        font-size: 11px;
+        color: #888;
+        margin-bottom: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
 
       .value {
         font-size: 14px;
         font-weight: 600;
         color: #1a1a1a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
-  }
-}
 
-// Balance Grid
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-
-  .stat-card {
-    background: white; // Actually inside a mat-card container in HTML usually, but here we might have 2 cards
-    text-align: center;
-    padding: 20px 16px !important;
-
-    .stat-label {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 8px;
-    }
-
-    .stat-value {
+    .copy-icon {
       font-size: 18px;
-      font-weight: 800;
-      color: #ff9500;
+      width: 18px;
+      height: 18px;
+      color: #ccc;
+      cursor: pointer;
+      transition: color 0.2s;
 
-      &.success {
-        color: #4caf50;
+      &:hover {
+        color: #ff9500;
       }
     }
   }
 }
 
-// Menu Card
+// ===== MENU CARD =====
 .menu-card {
+  padding: 16px 0 !important;
+
+  .menu-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 12px 20px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: #ff9500;
+    }
+  }
+
   .menu-item {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px 24px;
+    gap: 14px;
+    padding: 14px 20px;
     width: 100%;
     border: none;
     background: transparent;
@@ -252,91 +398,104 @@ mat-card {
     text-align: left;
 
     &:hover {
-      background: #f5f5f5;
+      background: #f8f8f8;
     }
 
     &:active {
-      background: #eee;
+      background: #f0f0f0;
     }
 
     .icon-box {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: #f5f5f5;
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #666;
 
       mat-icon {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+      }
+
+      &.security {
+        background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.15) 100%);
+        color: #2196f3;
+      }
+
+      &.pin {
+        background: linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(156, 39, 176, 0.15) 100%);
+        color: #9c27b0;
+      }
+
+      &.password {
+        background: linear-gradient(135deg, rgba(103, 58, 183, 0.1) 0%, rgba(103, 58, 183, 0.15) 100%);
+        color: #673ab7;
+      }
+
+      &.notif {
+        background: linear-gradient(135deg, rgba(255, 149, 0, 0.1) 0%, rgba(255, 107, 0, 0.15) 100%);
+        color: #ff9500;
+      }
+
+      &.help {
+        background: linear-gradient(135deg, rgba(0, 150, 136, 0.1) 0%, rgba(0, 150, 136, 0.15) 100%);
+        color: #009688;
+      }
+
+      &.logout-icon {
+        background: linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(244, 67, 54, 0.15) 100%);
+        color: #f44336;
       }
     }
 
-    span {
+    .menu-text {
       flex: 1;
-      font-weight: 600;
-      font-size: 14px;
-      color: #333;
+      min-width: 0;
+
+      .menu-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 2px;
+      }
+
+      .menu-desc {
+        display: block;
+        font-size: 12px;
+        color: #888;
+      }
     }
 
     .chevron {
-      color: #ccc;
       font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: #ccc;
     }
 
     &.logout {
-      color: #e53935;
+      margin-top: 8px;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 18px;
 
-      .icon-box {
-        background: rgba(229, 57, 53, 0.1);
-        color: #e53935;
-      }
-
-      span {
-        color: #e53935;
+      .menu-text .menu-label {
+        color: #f44336;
       }
     }
-  }
-
-  mat-divider {
-    border-top-color: #eee;
   }
 }
 
-// Bottom Nav (Floating style like in Settings)
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: white;
-  display: flex;
-  justify-content: space-around;
-  padding: 12px 0;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-  z-index: 100;
+// ===== APP VERSION =====
+.app-version {
+  text-align: center;
+  padding: 16px 0;
 
-  .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-decoration: none;
-    color: #999;
-    font-size: 10px;
-    gap: 4px;
-
-    mat-icon {
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-    }
-
-    &.active {
-      color: #ff9500;
-    }
+  span {
+    font-size: 12px;
+    color: #aaa;
   }
 }

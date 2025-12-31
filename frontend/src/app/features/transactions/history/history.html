@@ -1,24 +1,157 @@
 <div class="transaction-container">
+    <!-- Back Button -->
+    <div class="page-back">
+        <button mat-button routerLink="/dashboard" class="back-btn">
+            <mat-icon>arrow_back</mat-icon>
+            <span>Retour</span>
+        </button>
+    </div>
+
     <mat-card class="history-card">
         <mat-card-header class="card-header">
-            <div class="header-icon">
-                <mat-icon>history</mat-icon>
+            <div class="header-content">
+                <div class="header-icon">
+                    <mat-icon>history</mat-icon>
+                </div>
+                <div>
+                    <mat-card-title>Historique des transactions</mat-card-title>
+                    <mat-card-subtitle>{{ totalItems() }} transaction(s)</mat-card-subtitle>
+                </div>
             </div>
-            <mat-card-title>Historique</mat-card-title>
-            <mat-card-subtitle>Vos dernières transactions</mat-card-subtitle>
+            <div class="header-actions">
+                <button mat-icon-button (click)="filterPanelOpen.set(!filterPanelOpen())" 
+                        [color]="filterPanelOpen() ? 'primary' : ''">
+                    <mat-icon>filter_list</mat-icon>
+                </button>
+                <button mat-icon-button [matMenuTriggerFor]="exportMenu" [disabled]="exporting()">
+                    <mat-icon>download</mat-icon>
+                </button>
+                <mat-menu #exportMenu="matMenu">
+                    <button mat-menu-item (click)="exportToCSV()">
+                        <mat-icon>table_chart</mat-icon>
+                        <span>Exporter CSV</span>
+                    </button>
+                    <button mat-menu-item (click)="exportToJSON()">
+                        <mat-icon>code</mat-icon>
+                        <span>Exporter JSON</span>
+                    </button>
+                </mat-menu>
+            </div>
         </mat-card-header>
+
+        <!-- Résumé -->
+        @if (resume()) {
+        <div class="summary-bar">
+            <div class="summary-item income">
+                <mat-icon>arrow_downward</mat-icon>
+                <span>Entrées: {{ formatAmount(resume()!.totalEntrees) }} XOF</span>
+            </div>
+            <div class="summary-item expense">
+                <mat-icon>arrow_upward</mat-icon>
+                <span>Sorties: {{ formatAmount(resume()!.totalSorties) }} XOF</span>
+            </div>
+        </div>
+        }
+
         <mat-card-content>
-            <div class="filters">
-                <mat-chip-listbox aria-label="Filtres de transaction">
-                    <mat-chip-option [selected]="filterType() === null" (click)="setFilter(null)">Tout</mat-chip-option>
-                    <mat-chip-option [selected]="filterType() === 'DEPOSIT'"
-                        (click)="setFilter('DEPOSIT')">Dépôts</mat-chip-option>
-                    <mat-chip-option [selected]="filterType() === 'WITHDRAW'"
-                        (click)="setFilter('WITHDRAW')">Retraits</mat-chip-option>
-                    <mat-chip-option [selected]="filterType() === 'TRANSFER'"
-                        (click)="setFilter('TRANSFER')">Transferts</mat-chip-option>
-                    <mat-chip-option [selected]="filterType() === 'MERCHANT_PAYMENT'"
-                        (click)="setFilter('MERCHANT_PAYMENT')">Paiements</mat-chip-option>
+            <!-- Panneau de filtres avancés -->
+            @if (filterPanelOpen()) {
+            <mat-expansion-panel [expanded]="true" class="filter-panel">
+                <mat-expansion-panel-header>
+                    <mat-panel-title>Filtres avancés</mat-panel-title>
+                </mat-expansion-panel-header>
+                
+                <div class="filters-grid">
+                    <!-- Recherche -->
+                    <mat-form-field appearance="outline" class="filter-field full-width">
+                        <mat-label>Rechercher (référence, description)</mat-label>
+                        <input matInput [(ngModel)]="searchQuery" placeholder="Rechercher...">
+                        <mat-icon matSuffix>search</mat-icon>
+                    </mat-form-field>
+
+                    <!-- Type -->
+                    <mat-form-field appearance="outline" class="filter-field">
+                        <mat-label>Type</mat-label>
+                        <mat-select [(ngModel)]="selectedType">
+                            @for (type of transactionTypes; track type.value) {
+                                <mat-option [value]="type.value">{{ type.label }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+
+                    <!-- Statut -->
+                    <mat-form-field appearance="outline" class="filter-field">
+                        <mat-label>Statut</mat-label>
+                        <mat-select [(ngModel)]="selectedStatut">
+                            @for (statut of statuts; track statut.value) {
+                                <mat-option [value]="statut.value">{{ statut.label }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+
+                    <!-- Date début -->
+                    <mat-form-field appearance="outline" class="filter-field">
+                        <mat-label>Date début</mat-label>
+                        <input matInput [matDatepicker]="pickerDebut" [(ngModel)]="dateDebut">
+                        <mat-datepicker-toggle matIconSuffix [for]="pickerDebut"></mat-datepicker-toggle>
+                        <mat-datepicker #pickerDebut></mat-datepicker>
+                    </mat-form-field>
+
+                    <!-- Date fin -->
+                    <mat-form-field appearance="outline" class="filter-field">
+                        <mat-label>Date fin</mat-label>
+                        <input matInput [matDatepicker]="pickerFin" [(ngModel)]="dateFin">
+                        <mat-datepicker-toggle matIconSuffix [for]="pickerFin"></mat-datepicker-toggle>
+                        <mat-datepicker #pickerFin></mat-datepicker>
+                    </mat-form-field>
+
+                    <!-- Montant min -->
+                    <mat-form-field appearance="outline" class="filter-field">
+                        <mat-label>Montant min</mat-label>
+                        <input matInput type="number" [(ngModel)]="montantMin" placeholder="0">
+                        <span matTextSuffix>XOF</span>
+                    </mat-form-field>
+
+                    <!-- Montant max -->
+                    <mat-form-field appearance="outline" class="filter-field">
+                        <mat-label>Montant max</mat-label>
+                        <input matInput type="number" [(ngModel)]="montantMax" placeholder="1000000">
+                        <span matTextSuffix>XOF</span>
+                    </mat-form-field>
+
+                    <!-- Tri -->
+                    <mat-form-field appearance="outline" class="filter-field">
+                        <mat-label>Trier par</mat-label>
+                        <mat-select [(ngModel)]="selectedTri">
+                            @for (tri of triOptions; track tri.value) {
+                                <mat-option [value]="tri.value">{{ tri.label }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <div class="filter-actions">
+                    <button mat-button (click)="resetFilters()">
+                        <mat-icon>clear</mat-icon>
+                        Réinitialiser
+                    </button>
+                    <button mat-raised-button color="primary" (click)="applyFilters()">
+                        <mat-icon>search</mat-icon>
+                        Appliquer
+                    </button>
+                </div>
+            </mat-expansion-panel>
+            }
+
+            <!-- Filtres rapides (chips) -->
+            <div class="quick-filters">
+                <mat-chip-listbox aria-label="Filtres rapides">
+                    @for (type of transactionTypes; track type.value) {
+                        <mat-chip-option [selected]="selectedType() === type.value" 
+                                        (click)="selectedType.set(type.value); applyFilters()">
+                            {{ type.label }}
+                        </mat-chip-option>
+                    }
                 </mat-chip-listbox>
             </div>
 
@@ -32,33 +165,57 @@
                 <p>{{ error() }}</p>
                 <button mat-button color="primary" (click)="loadTransactions()">Réessayer</button>
             </div>
-            } @else if (filteredTransactions.length === 0) {
+            } @else if (transactions().length === 0) {
             <div class="empty-state">
                 <mat-icon>receipt_long</mat-icon>
                 <p>Aucune transaction trouvée</p>
+                <button mat-button color="primary" (click)="resetFilters()">Réinitialiser les filtres</button>
             </div>
             } @else {
             <mat-list>
-                @for (transaction of filteredTransactions; track transaction.id) {
+                @for (transaction of transactions(); track transaction._id) {
                 <mat-list-item class="transaction-item">
-                    <div class="transaction-icon" [class]="getTransactionColor(transaction.type)">
+                    <div class="transaction-icon" [attr.data-type]="getTransactionColor(transaction.type)">
                         <mat-icon>{{ getTransactionIcon(transaction.type) }}</mat-icon>
                     </div>
                     <div class="transaction-details">
-                        <span class="transaction-type">{{ getTransactionLabel(transaction.type) }}</span>
-                        <span class="transaction-date">{{ transaction.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+                        <div class="transaction-header">
+                            <span class="transaction-type">{{ getTransactionLabel(transaction.type) }}</span>
+                            <mat-chip [color]="getStatusColor(transaction.statut)" size="small">
+                                {{ getStatusLabel(transaction.statut) }}
+                            </mat-chip>
+                        </div>
+                        <span class="transaction-ref">Réf: {{ transaction.referenceExterne }}</span>
+                        <span class="transaction-date">{{ transaction.createdAt | date:'dd/MM/yyyy à HH:mm' }}</span>
                         @if (transaction.description) {
                         <span class="transaction-desc">{{ transaction.description }}</span>
                         }
+                        @if (transaction.utilisateurDestinationId && transaction.type === 'TRANSFER') {
+                        <span class="transaction-dest">→ {{ transaction.utilisateurDestinationId.nomComplet || transaction.utilisateurDestinationId.telephone }}</span>
+                        }
                     </div>
-                    <div class="transaction-amount" [class]="getTransactionColor(transaction.type)">
-                        {{ transaction.montant | currency:transaction.devise:'symbol':'1.0-0' }}
+                    <div class="transaction-amount" [attr.data-type]="getTransactionColor(transaction.type)">
+                        <span class="amount">{{ formatAmount(transaction.montant) }}</span>
+                        <span class="currency">{{ transaction.devise }}</span>
                     </div>
                 </mat-list-item>
                 <mat-divider></mat-divider>
                 }
             </mat-list>
+
+            <!-- Pagination -->
+            <mat-paginator 
+                [length]="totalItems()"
+                [pageSize]="pageSize()"
+                [pageIndex]="currentPage() - 1"
+                [pageSizeOptions]="[10, 20, 50, 100]"
+                (page)="onPageChange($event)"
+                showFirstLastButtons>
+            </mat-paginator>
             }
         </mat-card-content>
     </mat-card>
+
+    <!-- Bottom Navigation -->
+    <app-bottom-nav></app-bottom-nav>
 </div>

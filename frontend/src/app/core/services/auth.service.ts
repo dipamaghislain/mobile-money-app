@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { User } from '../models';
+import { Country, CountriesResponse } from '../models/country.model';
 
 export interface LoginRequest {
   email: string;
@@ -14,18 +15,35 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  nomComplet: string;
-  telephone?: string;
   email: string;
+  nomComplet: string;
+  telephone: string;
   motDePasse: string;
+  pays?: string;
   role?: 'client' | 'marchand';
-  pin?: string;
+}
+
+export interface SetupPinRequest {
+  pin: string;
+  confirmPin: string;
+}
+
+export interface ChangePinRequest {
+  ancienPin: string;
+  nouveauPin: string;
+  confirmPin: string;
 }
 
 export interface AuthResponse {
   message: string;
   user: User;
   token: string;
+  nextStep?: 'SETUP_PIN' | null;
+  paysConfig?: {
+    nom: string;
+    symbole: string;
+    limites: any;
+  };
 }
 
 @Injectable({
@@ -131,10 +149,11 @@ export class AuthService {
     this.currentUserSubject.next(user);
   }
 
-  changePassword(ancienMotDePasse: string, nouveauMotDePasse: string): Observable<{ message: string }> {
+  changePassword(ancienMotDePasse: string, nouveauMotDePasse: string, confirmMotDePasse?: string): Observable<{ message: string }> {
     return this.http.put<{ message: string }>(`${this.API_URL}/change-password`, {
       ancienMotDePasse,
-      nouveauMotDePasse
+      nouveauMotDePasse,
+      confirmMotDePasse
     }).pipe(
       catchError(this.handleError)
     );
@@ -154,8 +173,8 @@ export class AuthService {
     );
   }
 
-  forgotPassword(email: string): Observable<{ message: string; resetToken?: string; resetUrl?: string }> {
-    return this.http.post<{ message: string; resetToken?: string; resetUrl?: string }>(
+  forgotPassword(email: string): Observable<{ success: boolean; message: string; devCode?: string }> {
+    return this.http.post<{ success: boolean; message: string; devCode?: string }>(
       `${this.API_URL}/forgot-password`,
       { email }
     ).pipe(
@@ -163,16 +182,65 @@ export class AuthService {
     );
   }
 
-  resetPassword(token: string, nouveauMotDePasse: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.API_URL}/reset-password`, {
-      token,
-      nouveauMotDePasse
+  resetPassword(email: string, code: string, nouveauMotDePasse: string, confirmMotDePasse: string): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(`${this.API_URL}/reset-password`, {
+      email,
+      code,
+      nouveauMotDePasse,
+      confirmMotDePasse
     }).pipe(
       catchError(this.handleError)
     );
   }
 
-  private handleError(error: any): Observable<never> {
+  // =========================
+  //  PAYS
+  // =========================
+  getCountries(): Observable<CountriesResponse> {
+    return this.http.get<CountriesResponse>(`${this.API_URL}/countries`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // =========================
+  //  GESTION DU PIN
+  // =========================
+  setupPin(data: SetupPinRequest): Observable<{ message: string; pinConfigured: boolean }> {
+    return this.http.post<{ message: string; pinConfigured: boolean }>(`${this.API_URL}/setup-pin`, data).pipe(
+      tap(res => {
+        // Mettre à jour l'utilisateur avec pinConfigured = true
+        const currentUser = this.currentUserValue;
+        if (currentUser) {
+          const updatedUser = { ...currentUser, pinConfigured: true };
+          this.currentUserSubject.next(updatedUser);
+          if (isPlatformBrowser(this.platformId)) {
+            localStorage.setItem(environment.userKey, JSON.stringify(updatedUser));
+          }
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  changePin(data: ChangePinRequest): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.API_URL}/change-pin`, data).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  verifyPin(pin: string): Observable<{ message: string; valid: boolean }> {
+    return this.http.post<{ message: string; valid: boolean }>(`${this.API_URL}/verify-pin`, { pin }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Vérifier si l'utilisateur doit configurer son PIN
+  needsPinSetup(): boolean {
+    const user = this.currentUserValue;
+    return user ? !user.pinConfigured : false;
+  }
+
+  private handleError = (error: any): Observable<never> => {
     let errorMessage = 'Une erreur est survenue';
 
     if (error.error instanceof ErrorEvent) {

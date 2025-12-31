@@ -1,0 +1,354 @@
+.savings-container {
+  min-height: 100vh;
+  background: linear-gradient(145deg, #f5f7fa 0%, #e8ecf1 100%);
+  padding-bottom: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  // Conteneur principal centré
+  > * {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  // Header pleine largeur
+  > .page-header {
+    max-width: 100%;
+  }
+
+  // Bottom nav pleine largeur
+  > .bottom-nav {
+    max-width: 100%;
+  }
+
+  @media (min-width: 600px) {
+    padding-top: 20px;
+  }
+}
+
+// Header
+.page-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+  color: white;
+
+  .back-btn {
+    color: white;
+  }
+
+  .header-title {
+    flex: 1;
+    margin-left: 12px;
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+  }
+}
+
+// Loading State
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+  color: #666;
+}
+
+// Total Card
+.total-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 16px;
+  padding: 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+  .total-icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+    border-radius: 16px;
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: white;
+    }
+  }
+
+  .total-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .total-label {
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .total-amount {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+  }
+
+  .total-actions {
+    display: flex;
+    gap: 8px;
+  }
+}
+
+// Stats Row
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 16px 16px;
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    mat-icon {
+      color: #ff9500;
+    }
+
+    .stat-info {
+      display: flex;
+      flex-direction: column;
+
+      .stat-value {
+        font-weight: 600;
+        color: #1a1a2e;
+      }
+
+      .stat-label {
+        font-size: 0.75rem;
+        color: #888;
+      }
+    }
+  }
+}
+
+// Section Title
+.section-title {
+  margin: 0 16px 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+// Goals Section
+.goals-section {
+  padding: 0 16px;
+}
+
+// Goal Card
+.goal-card {
+  margin-bottom: 16px;
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  border-left: 4px solid var(--goal-color, #ff9500);
+
+  .goal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 16px 0;
+
+    .goal-icon {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      color: white;
+
+      mat-icon {
+        font-size: 24px;
+      }
+    }
+
+    .goal-info {
+      flex: 1;
+
+      .goal-name {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1a1a2e;
+      }
+
+      .goal-desc {
+        margin: 2px 0 0;
+        font-size: 0.8rem;
+        color: #888;
+      }
+    }
+  }
+
+  .goal-body {
+    padding: 12px 16px;
+
+    .amount-row {
+      margin-bottom: 8px;
+
+      .current-amount {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a1a2e;
+      }
+
+      .target-amount {
+        font-size: 0.9rem;
+        color: #888;
+        margin-left: 4px;
+      }
+    }
+
+    .progress-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+
+      .progress-bar {
+        flex: 1;
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+
+        .progress-fill {
+          height: 100%;
+          border-radius: 4px;
+          transition: width 0.5s ease;
+        }
+      }
+
+      .progress-text {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #666;
+        min-width: 45px;
+        text-align: right;
+      }
+    }
+
+    .deadline-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: #666;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+
+      .days-left {
+        margin-left: auto;
+        padding: 2px 8px;
+        background: #e3f2fd;
+        color: #1976d2;
+        border-radius: 12px;
+        font-size: 0.75rem;
+
+        &.urgent {
+          background: #ffebee;
+          color: #d32f2f;
+        }
+      }
+    }
+  }
+
+  .goal-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px 16px;
+    border-top: 1px solid #f0f0f0;
+
+    button {
+      flex: 1;
+      border-radius: 8px;
+
+      mat-icon {
+        margin-right: 4px;
+      }
+    }
+  }
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ff950020 0%, #ff6b0020 100%);
+    border-radius: 50%;
+    margin-bottom: 24px;
+
+    mat-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+      color: #ff9500;
+    }
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 1.25rem;
+    color: #1a1a2e;
+  }
+
+  p {
+    margin: 0 0 24px;
+    color: #666;
+    max-width: 280px;
+  }
+}
+
+// Delete button
+.delete-btn {
+  color: #d32f2f !important;
+}

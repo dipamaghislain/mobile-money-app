@@ -1,5 +1,7 @@
 // backend/tests/integration/api.test.js
-// Tests d'intégration pour l'API Mobile Money
+// Tests d'intégration pour l'API Mobile Money Multi-Pays
+// Authentification: EMAIL + MOT DE PASSE
+// Transactions: TELEPHONE + PIN
 
 const request = require('supertest');
 const mongoose = require('mongoose');
@@ -52,7 +54,7 @@ describe('GET /', () => {
 });
 
 // ===========================================
-// TESTS AUTHENTIFICATION
+// TESTS AUTHENTIFICATION (EMAIL + MOT DE PASSE)
 // ===========================================
 describe('API Auth', () => {
   describe('POST /api/auth/register', () => {
@@ -61,9 +63,10 @@ describe('API Auth', () => {
         .post('/api/auth/register')
         .send({
           nomComplet: 'Test User',
-          telephone: '0612345678',
+          telephone: '70123456',  // Format BF: 8 chiffres
           email: 'test@example.com',
-          motDePasse: 'password123'
+          motDePasse: 'password123',
+          pays: 'BF'
         });
 
       expect(res.statusCode).toBe(201);
@@ -71,6 +74,9 @@ describe('API Auth', () => {
       expect(res.body).toHaveProperty('user');
       expect(res.body.user.nomComplet).toBe('Test User');
       expect(res.body.user.role).toBe('client');
+      expect(res.body.user.pays).toBe('BF');
+      expect(res.body.user.devise).toBe('XOF');
+      expect(res.body.nextStep).toBe('SETUP_PIN');
     });
 
     it('devrait créer un marchand avec un code', async () => {
@@ -78,10 +84,11 @@ describe('API Auth', () => {
         .post('/api/auth/register')
         .send({
           nomComplet: 'Test Marchand',
-          telephone: '0612345679',
+          telephone: '70123457',
           email: 'marchand@example.com',
           motDePasse: 'password123',
-          role: 'marchand'
+          role: 'marchand',
+          pays: 'BF'
         });
 
       expect(res.statusCode).toBe(201);
@@ -95,9 +102,10 @@ describe('API Auth', () => {
         .post('/api/auth/register')
         .send({
           nomComplet: 'First User',
-          telephone: '0612345678',
+          telephone: '70123456',
           email: 'first@example.com',
-          motDePasse: 'password123'
+          motDePasse: 'password123',
+          pays: 'BF'
         });
 
       // Essayer de créer avec le même téléphone
@@ -105,13 +113,41 @@ describe('API Auth', () => {
         .post('/api/auth/register')
         .send({
           nomComplet: 'Second User',
-          telephone: '0612345678',
+          telephone: '70123456',
           email: 'second@example.com',
-          motDePasse: 'password123'
+          motDePasse: 'password123',
+          pays: 'BF'
         });
 
       expect(res.statusCode).toBe(400);
-      expect(res.body.message).toContain('existe déjà');
+      expect(res.body.message).toContain('téléphone');
+    });
+
+    it('devrait refuser si l\'email existe déjà', async () => {
+      // Créer un premier utilisateur
+      await request(app)
+        .post('/api/auth/register')
+        .send({
+          nomComplet: 'First User',
+          telephone: '70123456',
+          email: 'duplicate@example.com',
+          motDePasse: 'password123',
+          pays: 'BF'
+        });
+
+      // Essayer de créer avec le même email
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          nomComplet: 'Second User',
+          telephone: '70123457',
+          email: 'duplicate@example.com',
+          motDePasse: 'password123',
+          pays: 'BF'
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.message).toContain('email');
     });
 
     it('devrait refuser si les champs obligatoires sont manquants', async () => {
@@ -123,6 +159,21 @@ describe('API Auth', () => {
 
       expect(res.statusCode).toBe(400);
     });
+
+    it('devrait refuser un format de téléphone invalide', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          nomComplet: 'Test User',
+          telephone: '12345', // Format invalide
+          email: 'test@example.com',
+          motDePasse: 'password123',
+          pays: 'BF'
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.message).toMatch(/8 chiffres/);
+    });
   });
 
   describe('POST /api/auth/login', () => {
@@ -132,17 +183,18 @@ describe('API Auth', () => {
         .post('/api/auth/register')
         .send({
           nomComplet: 'Test User',
-          telephone: '0612345678',
+          telephone: '70123456',
           email: 'test@example.com',
-          motDePasse: 'password123'
+          motDePasse: 'password123',
+          pays: 'BF'
         });
     });
 
-    it('devrait connecter un utilisateur avec succès', async () => {
+    it('devrait connecter un utilisateur avec succès (via email)', async () => {
       const res = await request(app)
         .post('/api/auth/login')
         .send({
-          telephone: '0612345678',
+          email: 'test@example.com',
           motDePasse: 'password123'
         });
 
@@ -156,19 +208,19 @@ describe('API Auth', () => {
       const res = await request(app)
         .post('/api/auth/login')
         .send({
-          telephone: '0612345678',
+          email: 'test@example.com',
           motDePasse: 'wrongpassword'
         });
 
       expect(res.statusCode).toBe(401);
-      expect(res.body.message).toBe('Identifiants incorrects');
+      expect(res.body.message).toBe('Email ou mot de passe incorrect');
     });
 
     it('devrait refuser un utilisateur inexistant', async () => {
       const res = await request(app)
         .post('/api/auth/login')
         .send({
-          telephone: '0699999999',
+          email: 'nonexistent@example.com',
           motDePasse: 'password123'
         });
 
@@ -183,9 +235,10 @@ describe('API Auth', () => {
         .post('/api/auth/register')
         .send({
           nomComplet: 'Test User',
-          telephone: '0612345678',
+          telephone: '70123456',
           email: 'test@example.com',
-          motDePasse: 'password123'
+          motDePasse: 'password123',
+          pays: 'BF'
         });
       
       authToken = registerRes.body.token;
@@ -199,7 +252,8 @@ describe('API Auth', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.nomComplet).toBe('Test User');
-      expect(res.body.telephone).toBe('0612345678');
+      expect(res.body.email).toBe('test@example.com');
+      expect(res.body.pays).toBe('BF');
     });
 
     it('devrait refuser sans token', async () => {
@@ -217,6 +271,19 @@ describe('API Auth', () => {
       expect(res.statusCode).toBe(401);
     });
   });
+
+  describe('GET /api/auth/countries', () => {
+    it('devrait retourner la liste des pays supportés', async () => {
+      const res = await request(app)
+        .get('/api/auth/countries');
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('countries');
+      expect(res.body).toHaveProperty('default');
+      expect(Array.isArray(res.body.countries)).toBe(true);
+      expect(res.body.countries.length).toBeGreaterThanOrEqual(5);
+    });
+  });
 });
 
 // ===========================================
@@ -229,9 +296,10 @@ describe('API Wallet', () => {
       .post('/api/auth/register')
       .send({
         nomComplet: 'Test User',
-        telephone: '0612345678',
+        telephone: '70123456',
         email: 'test@example.com',
-        motDePasse: 'password123'
+        motDePasse: 'password123',
+        pays: 'BF'
       });
     
     authToken = registerRes.body.token;
@@ -249,6 +317,7 @@ describe('API Wallet', () => {
       expect(res.body).toHaveProperty('solde');
       expect(res.body).toHaveProperty('devise');
       expect(res.body.solde).toBe(0);
+      expect(res.body.devise).toBe('XOF');
     });
   });
 
@@ -257,7 +326,7 @@ describe('API Wallet', () => {
       const res = await request(app)
         .patch('/api/wallet/pin')
         .set('Authorization', `Bearer ${authToken}`)
-        .send({ nouveauPin: '1234' });
+        .send({ nouveauPin: '1357' });  // PIN sécurisé, pas 1234
 
       expect(res.statusCode).toBe(200);
       expect(res.body.message).toContain('succès');
@@ -284,9 +353,10 @@ describe('API Transactions', () => {
       .post('/api/auth/register')
       .send({
         nomComplet: 'Test User',
-        telephone: '0612345678',
+        telephone: '70123456',
         email: 'test@example.com',
-        motDePasse: 'password123'
+        motDePasse: 'password123',
+        pays: 'BF'
       });
     
     authToken = registerRes.body.token;
@@ -296,7 +366,7 @@ describe('API Transactions', () => {
     await request(app)
       .patch('/api/wallet/pin')
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ nouveauPin: '1234' });
+      .send({ nouveauPin: '1357' });
 
     // Récupérer le wallet
     testWallet = await Wallet.findOne({ utilisateurId: testUser.id });
@@ -338,7 +408,7 @@ describe('API Transactions', () => {
       const res = await request(app)
         .post('/api/transactions/withdraw')
         .set('Authorization', `Bearer ${authToken}`)
-        .send({ montant: 5000, pin: '1234' });
+        .send({ montant: 5000, pin: '1357' });
 
       expect(res.statusCode).toBe(200);
       expect(res.body.message).toContain('succès');
@@ -349,7 +419,7 @@ describe('API Transactions', () => {
       const res = await request(app)
         .post('/api/transactions/withdraw')
         .set('Authorization', `Bearer ${authToken}`)
-        .send({ montant: 50000, pin: '1234' });
+        .send({ montant: 50000, pin: '1357' });
 
       expect(res.statusCode).toBe(400);
       expect(res.body.message).toContain('insuffisant');
@@ -376,9 +446,10 @@ describe('API Transactions', () => {
         .post('/api/auth/register')
         .send({
           nomComplet: 'Destinataire User',
-          telephone: '0698765432',
+          telephone: '70987654',
           email: 'dest@example.com',
-          motDePasse: 'password123'
+          motDePasse: 'password123',
+          pays: 'BF'
         });
       
       destinataire = destRes.body.user;
@@ -396,9 +467,9 @@ describe('API Transactions', () => {
         .post('/api/transactions/transfer')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          telephoneDestinataire: '0698765432',
+          telephoneDestinataire: '+22670987654',  // Format E.164
           montant: 5000,
-          pin: '1234'
+          pin: '1357'
         });
 
       expect(res.statusCode).toBe(200);
@@ -415,9 +486,9 @@ describe('API Transactions', () => {
         .post('/api/transactions/transfer')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          telephoneDestinataire: '0612345678',
+          telephoneDestinataire: '+22670123456',
           montant: 1000,
-          pin: '1234'
+          pin: '1357'
         });
 
       expect(res.statusCode).toBe(400);
@@ -429,9 +500,9 @@ describe('API Transactions', () => {
         .post('/api/transactions/transfer')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          telephoneDestinataire: '0600000000',
+          telephoneDestinataire: '+22600000000',
           montant: 1000,
-          pin: '1234'
+          pin: '1357'
         });
 
       expect(res.statusCode).toBe(404);
@@ -448,10 +519,11 @@ describe('API Transactions', () => {
         .post('/api/auth/register')
         .send({
           nomComplet: 'Boutique Test',
-          telephone: '0611111111',
+          telephone: '70111111',
           email: 'boutique@example.com',
           motDePasse: 'password123',
-          role: 'marchand'
+          role: 'marchand',
+          pays: 'BF'
         });
       
       marchand = merchantRes.body.user;
@@ -470,7 +542,7 @@ describe('API Transactions', () => {
         .send({
           codeMarchand: marchand.codeMarchand,
           montant: 2000,
-          pin: '1234'
+          pin: '1357'
         });
 
       expect(res.statusCode).toBe(200);
@@ -489,7 +561,7 @@ describe('API Transactions', () => {
         .send({
           codeMarchand: 'INVALID_CODE',
           montant: 1000,
-          pin: '1234'
+          pin: '1357'
         });
 
       expect(res.statusCode).toBe(404);

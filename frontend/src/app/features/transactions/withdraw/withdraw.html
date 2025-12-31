@@ -1,89 +1,299 @@
+<!-- src/app/features/transactions/withdraw/withdraw.html -->
 <div class="transaction-container">
-    <mat-card class="withdraw-card">
-        <mat-card-header class="card-header">
-            <div class="header-icon">
-                <mat-icon>account_balance</mat-icon>
-            </div>
-            <mat-card-title>Effectuer un retrait</mat-card-title>
-            <mat-card-subtitle>Retirez de l'argent de votre portefeuille</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-            <div class="info-box">
-                <mat-icon class="info-icon">info</mat-icon>
-                <div class="info-content">
-                    <p class="info-title">Informations importantes</p>
-                    <ul>
-                        <li>Le retrait débite directement <strong>votre compte</strong></li>
-                        <li>Le <strong>code PIN</strong> est nécessaire pour confirmer la transaction</li>
-                        <li>Le montant minimum est de 100 XOF</li>
-                        <li>Assurez-vous d'avoir un solde suffisant</li>
-                    </ul>
-                </div>
-            </div>
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="withdraw-form">
-                @if (error()) {
-                <div class="error-message">
-                    <mat-icon>error</mat-icon>
-                    <span>{{ error() }}</span>
-                </div>
+  <!-- Back Button -->
+  <div class="page-back">
+    <button mat-button routerLink="/dashboard" class="back-btn">
+      <mat-icon>arrow_back</mat-icon>
+      <span>Retour</span>
+    </button>
+  </div>
+
+  <mat-card class="withdraw-card">
+    <!-- Header -->
+    <mat-card-header class="card-header">
+      <div class="header-icon">
+        <mat-icon>remove_circle</mat-icon>
+      </div>
+      <mat-card-title>Retirer de l'argent</mat-card-title>
+      <mat-card-subtitle>Vers {{ userCountry()?.nom || 'Mobile Money' }}</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Balance display -->
+      <div class="balance-display">
+        <span class="balance-label">Solde disponible</span>
+        <span class="balance-amount">{{ balance() | currencyXOF }}</span>
+      </div>
+
+      <!-- Étape 1: Formulaire -->
+      @if (step() === 'form') {
+        <!-- Messages -->
+        @if (error()) {
+          <div class="message-box error-message">
+            <mat-icon>error</mat-icon>
+            <span>{{ error() }}</span>
+          </div>
+        }
+
+        @if (success()) {
+          <div class="message-box success-message">
+            <mat-icon>check_circle</mat-icon>
+            <span>{{ success() }}</span>
+          </div>
+        }
+
+        <form [formGroup]="form" class="withdraw-form">
+          <!-- Sélection opérateur -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <mat-icon>sim_card</mat-icon>
+              Opérateur de réception
+            </h3>
+
+            @if (loadingCountry()) {
+              <div class="loading-operators">
+                <mat-spinner diameter="24"></mat-spinner>
+                <span>Chargement...</span>
+              </div>
+            } @else {
+              <div class="operators-grid">
+                @for (op of operatorsDetailed(); track op.nom) {
+                  <button 
+                    type="button"
+                    class="operator-card"
+                    [class.selected]="form.get('operateur')?.value === op.nom"
+                    [style.--operator-color]="op.couleur"
+                    (click)="form.patchValue({ operateur: op.nom })"
+                  >
+                    <span class="operator-icon">{{ op.icon }}</span>
+                    <span class="operator-name">{{ op.nom }}</span>
+                    @if (form.get('operateur')?.value === op.nom) {
+                      <mat-icon class="check-icon">check_circle</mat-icon>
+                    }
+                  </button>
                 }
-
-                @if (success()) {
-                <div class="success-message">
-                    <mat-icon>check_circle</mat-icon>
-                    <span>{{ success() }}</span>
+              </div>
+              @if (operatorsDetailed().length === 0) {
+                <div class="no-operators">
+                  <mat-icon>warning</mat-icon>
+                  <p>Aucun opérateur disponible pour votre pays</p>
                 </div>
-                }
-                <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Montant à retirer</mat-label>
-                    <input matInput type="number" formControlName="amount" placeholder="Ex: 5000" min="100">
-                    <mat-icon matPrefix>attach_money</mat-icon>
-                    <span matTextSuffix>XOF</span>
-                    <mat-hint>Montant minimum : 100 XOF</mat-hint>
-                    <mat-error *ngIf="form.get('amount')?.hasError('required')">
-                        Le montant est requis
-                    </mat-error>
-                    <mat-error *ngIf="form.get('amount')?.hasError('min')">
-                        Le montant minimum est de 100 XOF
-                    </mat-error>
-                </mat-form-field>
+              }
+            }
+          </div>
 
-                <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Code PIN de sécurité</mat-label>
-                    <input matInput type="password" formControlName="pin" placeholder="****" maxlength="4"
-                        autocomplete="off">
-                    <mat-icon matPrefix>lock</mat-icon>
-                    <mat-hint>4 chiffres requis</mat-hint>
-                    <mat-error *ngIf="form.get('pin')?.hasError('required')">
-                        Le code PIN est requis
-                    </mat-error>
-                    <mat-error *ngIf="form.get('pin')?.hasError('pattern')">
-                        Le code PIN doit contenir uniquement des chiffres
-                    </mat-error>
-                    <mat-error *ngIf="form.get('pin')?.hasError('minlength')">
-                        Le code PIN doit contenir 4 chiffres
-                    </mat-error>
-                </mat-form-field>
+          <!-- Numéro de téléphone -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <mat-icon>phone</mat-icon>
+              Numéro de réception
+            </h3>
 
-                <div class="actions">
-                    <button mat-button type="button" routerLink="/dashboard" class="cancel-btn">
-                        <mat-icon>arrow_back</mat-icon>
-                        <span>Annuler</span>
-                    </button>
-                    <button mat-raised-button color="warn" type="submit" [disabled]="form.invalid || loading()"
-                        class="submit-btn">
-                        @if (loading()) {
-                        <mat-spinner diameter="20"></mat-spinner>
-                        <span>En cours...</span>
-                        } @else {
-                        <ng-container matButtonIcon>
-                            <mat-icon>account_balance</mat-icon>
-                            <span>Valider le retrait</span>
-                        </ng-container>
-                        }
-                    </button>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Numéro Mobile Money</mat-label>
+              <span matTextPrefix class="dial-prefix">{{ userCountry()?.indicatif }}&nbsp;</span>
+              <input 
+                matInput 
+                type="tel" 
+                formControlName="telephone" 
+                [placeholder]="userCountry()?.formatTelephone?.exemple || 'Numéro'"
+                inputmode="numeric"
+              />
+              <mat-icon matSuffix>smartphone</mat-icon>
+              <mat-hint>L'argent sera envoyé sur ce numéro {{ form.get('operateur')?.value || '' }}</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <!-- Montant -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <mat-icon>payments</mat-icon>
+              Montant à retirer
+            </h3>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Montant</mat-label>
+              <input 
+                matInput 
+                type="number" 
+                formControlName="montant" 
+                placeholder="Ex: 5000" 
+                [min]="limits()?.retraitMin || 500"
+                [max]="Math.min(limits()?.retraitMax || 500000, balance())"
+              />
+              <mat-icon matPrefix>attach_money</mat-icon>
+              <span matTextSuffix>{{ userCountry()?.symbole || 'FCFA' }}</span>
+              <mat-hint>
+                Min: {{ (limits()?.retraitMin || 500) | currencyXOF }} - 
+                Max: {{ (limits()?.retraitMax || 500000) | currencyXOF }}
+              </mat-hint>
+              @if (form.get('montant')?.hasError('required') && form.get('montant')?.touched) {
+                <mat-error>Le montant est requis</mat-error>
+              }
+              @if (form.get('montant')?.hasError('min')) {
+                <mat-error>Montant minimum: {{ limits()?.retraitMin || 500 }} {{ userCountry()?.symbole || 'FCFA' }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Frais et montant net -->
+            @if (fees()) {
+              <div class="fees-summary">
+                <div class="fees-header">
+                  <mat-icon>receipt</mat-icon>
+                  <span>Détails du retrait</span>
+                  @if (calculatingFees()) {
+                    <mat-spinner diameter="16"></mat-spinner>
+                  }
                 </div>
-            </form>
-        </mat-card-content>
-    </mat-card>
+                <mat-divider></mat-divider>
+                <div class="fees-rows">
+                  <div class="fees-row">
+                    <span>Montant demandé</span>
+                    <span>{{ form.get('montant')?.value | currencyXOF }}</span>
+                  </div>
+                  <div class="fees-row">
+                    <span>Frais ({{ fees()?.tauxFrais }}%)</span>
+                    <span class="fees-amount">- {{ fees()?.frais | currencyXOF }}</span>
+                  </div>
+                  <mat-divider></mat-divider>
+                  <div class="fees-row total">
+                    <span>Vous recevrez</span>
+                    <span class="net-amount">{{ fees()?.montantNet | currencyXOF }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Code PIN -->
+          <div class="form-section pin-section">
+            <h3 class="section-title">
+              <mat-icon>lock</mat-icon>
+              Sécurité
+            </h3>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Code PIN</mat-label>
+              <input 
+                matInput 
+                type="password" 
+                formControlName="pin" 
+                placeholder="****" 
+                maxlength="6"
+                inputmode="numeric"
+                autocomplete="off"
+              />
+              <mat-icon matPrefix>password</mat-icon>
+              <mat-hint>4 à 6 chiffres</mat-hint>
+              @if (form.get('pin')?.hasError('required') && form.get('pin')?.touched) {
+                <mat-error>Le code PIN est requis</mat-error>
+              }
+              @if (form.get('pin')?.hasError('pattern')) {
+                <mat-error>Chiffres uniquement</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <!-- Actions -->
+          <div class="actions">
+            <button mat-button type="button" routerLink="/dashboard" class="cancel-btn">
+              <mat-icon>arrow_back</mat-icon>
+              <span>Annuler</span>
+            </button>
+            <button 
+              mat-raised-button 
+              type="button" 
+              [disabled]="form.invalid"
+              class="submit-btn"
+              (click)="proceedToConfirm()"
+            >
+              <mat-icon>arrow_forward</mat-icon>
+              <span>Continuer</span>
+            </button>
+          </div>
+        </form>
+      }
+
+      <!-- Étape 2: Confirmation -->
+      @if (step() === 'confirm') {
+        <div class="confirm-step">
+          <div class="confirm-summary">
+            <h3>Confirmez votre retrait</h3>
+            
+            <div class="summary-item">
+              <span class="summary-label">Opérateur</span>
+              <span class="summary-value">
+                <span class="operator-badge">
+                  {{ getOperatorIcon(form.get('operateur')?.value || '') }}
+                  {{ form.get('operateur')?.value }}
+                </span>
+              </span>
+            </div>
+            
+            <div class="summary-item">
+              <span class="summary-label">Numéro de réception</span>
+              <span class="summary-value">{{ userCountry()?.indicatif }} {{ form.get('telephone')?.value }}</span>
+            </div>
+            
+            <mat-divider></mat-divider>
+            
+            <div class="summary-item">
+              <span class="summary-label">Montant retiré</span>
+              <span class="summary-value">{{ form.get('montant')?.value | currencyXOF }}</span>
+            </div>
+            
+            <div class="summary-item">
+              <span class="summary-label">Frais</span>
+              <span class="summary-value fees">- {{ fees()?.frais | currencyXOF }}</span>
+            </div>
+            
+            <mat-divider></mat-divider>
+            
+            <div class="summary-item total">
+              <span class="summary-label">Vous recevrez</span>
+              <span class="summary-value amount">{{ fees()?.montantNet | currencyXOF }}</span>
+            </div>
+          </div>
+
+          <div class="warning-box">
+            <mat-icon>warning</mat-icon>
+            <span>Cette action est irréversible. Vérifiez bien le numéro de réception.</span>
+          </div>
+
+          @if (error()) {
+            <div class="message-box error-message">
+              <mat-icon>error</mat-icon>
+              <span>{{ error() }}</span>
+            </div>
+          }
+
+          <div class="actions">
+            <button mat-button type="button" class="cancel-btn" (click)="backToForm()">
+              <mat-icon>arrow_back</mat-icon>
+              <span>Modifier</span>
+            </button>
+            <button 
+              mat-raised-button 
+              [disabled]="loading()"
+              class="submit-btn danger"
+              (click)="onSubmit()"
+            >
+              @if (loading()) {
+                <mat-spinner diameter="20"></mat-spinner>
+                <span>Traitement...</span>
+              } @else {
+                <ng-container>
+                  <mat-icon>check</mat-icon>
+                  <span>Confirmer le retrait</span>
+                </ng-container>
+              }
+            </button>
+          </div>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Bottom Navigation -->
+  <app-bottom-nav></app-bottom-nav>
 </div>

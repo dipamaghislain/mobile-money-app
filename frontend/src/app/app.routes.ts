@@ -6,7 +6,7 @@ import { adminGuard } from './core/guards/admin.guard';
 export const routes: Routes = [
     {
         path: '',
-        redirectTo: '/dashboard',
+        redirectTo: '/auth/login',
         pathMatch: 'full'
     },
     {
@@ -24,20 +24,24 @@ export const routes: Routes = [
         loadChildren: () => import('./features/transactions/transactions.module').then(m => m.TransactionsModule),
         canActivate: [AuthGuard]
     },
-
+    {
+        path: 'notifications',
+        loadComponent: () => import('./features/notifications/notifications.component').then(m => m.NotificationsComponent),
+        canActivate: [AuthGuard]
+    },
     {
         path: 'profile',
         loadChildren: () => import('./features/profile/profile-module').then(m => m.ProfileModule),
         canActivate: [AuthGuard]
     },
     {
-        path: 'savings',
-        loadChildren: () => import('./features/savings/savings-module').then(m => m.SavingsModule),
+        path: 'settings',
+        loadChildren: () => import('./features/settings/settings.module').then(m => m.SettingsModule),
         canActivate: [AuthGuard]
     },
     {
-        path: 'settings',
-        loadChildren: () => import('./features/settings/settings.module').then(m => m.SettingsModule),
+        path: 'savings',
+        loadChildren: () => import('./features/savings/savings-module').then(m => m.SavingsModule),
         canActivate: [AuthGuard]
     },
     {
@@ -47,6 +51,6 @@ export const routes: Routes = [
     },
     {
         path: '**',
-        redirectTo: '/dashboard'
+        redirectTo: '/auth/login'
     }
 ];

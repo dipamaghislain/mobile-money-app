@@ -1,0 +1,170 @@
+<div class="savings-container">
+  <!-- Header -->
+  <header class="page-header">
+    <button mat-icon-button class="back-btn" routerLink="/dashboard">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="header-title">
+      <h1>Ma Tirelire</h1>
+      <p class="subtitle">Économisez pour vos projets</p>
+    </div>
+    <button mat-icon-button [matMenuTriggerFor]="menu">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="openCreateGoal()">
+        <mat-icon>add</mat-icon>
+        <span>Nouvel objectif</span>
+      </button>
+      <button mat-menu-item (click)="refreshData()">
+        <mat-icon>refresh</mat-icon>
+        <span>Actualiser</span>
+      </button>
+    </mat-menu>
+  </header>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Chargement...</p>
+    </div>
+  } @else {
+    <!-- Total Savings Card -->
+    <div class="total-card">
+      <div class="total-icon">
+        <mat-icon>savings</mat-icon>
+      </div>
+      <div class="total-info">
+        <span class="total-label">Épargne totale</span>
+        <span class="total-amount">{{ totalSavings() | currencyXOF }}</span>
+      </div>
+      <div class="total-actions">
+        <button mat-mini-fab color="primary" (click)="openDeposit()" matTooltip="Épargner">
+          <mat-icon>add</mat-icon>
+        </button>
+        <button mat-mini-fab color="warn" (click)="openWithdraw()" [disabled]="totalSavings() === 0" matTooltip="Retirer">
+          <mat-icon>remove</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-row">
+      <div class="stat-item">
+        <mat-icon>account_balance_wallet</mat-icon>
+        <div class="stat-info">
+          <span class="stat-value">{{ walletBalance() | currencyXOF }}</span>
+          <span class="stat-label">Solde disponible</span>
+        </div>
+      </div>
+      <div class="stat-item">
+        <mat-icon>trending_up</mat-icon>
+        <div class="stat-info">
+          <span class="stat-value">{{ savingsGoals().length }}</span>
+          <span class="stat-label">Objectif{{ savingsGoals().length > 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Savings Goals List -->
+    @if (savingsGoals().length > 0) {
+      <div class="goals-section">
+        <h2 class="section-title">Mes Objectifs</h2>
+        
+        @for (goal of savingsGoals(); track goal.id) {
+          <mat-card class="goal-card" [style.--goal-color]="goal.couleur || '#ff9500'">
+            <div class="goal-header">
+              <div class="goal-icon" [style.background]="goal.couleur || '#ff9500'">
+                <mat-icon>{{ goal.icone || 'savings' }}</mat-icon>
+              </div>
+              <div class="goal-info">
+                <h3 class="goal-name">{{ goal.nom }}</h3>
+                @if (goal.description) {
+                  <p class="goal-desc">{{ goal.description }}</p>
+                }
+              </div>
+              <button mat-icon-button [matMenuTriggerFor]="goalMenu">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #goalMenu="matMenu">
+                <button mat-menu-item (click)="openDeposit(goal)">
+                  <mat-icon>add</mat-icon>
+                  <span>Épargner</span>
+                </button>
+                <button mat-menu-item (click)="openWithdraw(goal)" [disabled]="goal.montantActuel === 0">
+                  <mat-icon>remove</mat-icon>
+                  <span>Retirer</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="editGoal(goal)">
+                  <mat-icon>edit</mat-icon>
+                  <span>Modifier</span>
+                </button>
+                <button mat-menu-item (click)="deleteGoal(goal)" class="delete-btn">
+                  <mat-icon>delete</mat-icon>
+                  <span>Supprimer</span>
+                </button>
+              </mat-menu>
+            </div>
+
+            <div class="goal-body">
+              <div class="amount-row">
+                <span class="current-amount">{{ goal.montantActuel | currencyXOF }}</span>
+                @if (goal.objectifMontant) {
+                  <span class="target-amount">/ {{ goal.objectifMontant | currencyXOF }}</span>
+                }
+              </div>
+
+              @if (goal.objectifMontant && goal.objectifMontant > 0) {
+                <div class="progress-container">
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="getProgress(goal)" [style.background]="goal.couleur || '#ff9500'"></div>
+                  </div>
+                  <span class="progress-text">{{ getProgress(goal) | number:'1.0-0' }}%</span>
+                </div>
+              }
+
+              @if (goal.dateObjectif) {
+                <div class="deadline-row">
+                  <mat-icon>event</mat-icon>
+                  <span>Objectif: {{ goal.dateObjectif | date:'dd MMM yyyy' }}</span>
+                  <span class="days-left" [class.urgent]="getDaysLeft(goal) <= 7">
+                    {{ getDaysLeft(goal) > 0 ? getDaysLeft(goal) + ' jours restants' : 'Échéance atteinte' }}
+                  </span>
+                </div>
+              }
+            </div>
+
+            <div class="goal-actions">
+              <button mat-stroked-button (click)="openDeposit(goal)">
+                <mat-icon>add</mat-icon>
+                Épargner
+              </button>
+              <button mat-stroked-button (click)="openWithdraw(goal)" [disabled]="goal.montantActuel === 0">
+                <mat-icon>remove</mat-icon>
+                Retirer
+              </button>
+            </div>
+          </mat-card>
+        }
+      </div>
+    } @else {
+      <!-- Empty State -->
+      <div class="empty-state">
+        <div class="empty-icon">
+          <mat-icon>savings</mat-icon>
+        </div>
+        <h3>Commencez à épargner !</h3>
+        <p>Créez votre premier objectif d'épargne et commencez à économiser pour vos projets.</p>
+        <button mat-raised-button color="primary" (click)="openCreateGoal()">
+          <mat-icon>add</mat-icon>
+          Créer un objectif
+        </button>
+      </div>
+    }
+  }
+
+  <!-- Bottom Navigation -->
+  <app-bottom-nav></app-bottom-nav>
+</div>

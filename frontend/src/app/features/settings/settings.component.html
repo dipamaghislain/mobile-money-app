@@ -5,25 +5,32 @@
             <mat-icon>arrow_back</mat-icon>
         </button>
         <h1>Paramètres</h1>
+        <div class="header-spacer"></div>
     </header>
 
     <div class="settings-content">
         <!-- Préférences Section -->
         <section class="settings-section">
-            <h2 class="section-title">Préférences</h2>
+            <h2 class="section-title">
+                <mat-icon>tune</mat-icon>
+                Préférences
+            </h2>
             <div class="settings-card">
                 <div class="settings-item" (click)="toggleDarkMode()">
-                    <div class="item-icon">
+                    <div class="item-icon theme">
                         <mat-icon>dark_mode</mat-icon>
                     </div>
-                    <span class="item-label">Mode sombre</span>
+                    <div class="item-content">
+                        <span class="item-label">Mode sombre</span>
+                        <span class="item-desc">Activer le thème sombre</span>
+                    </div>
                     <mat-slide-toggle [checked]="darkMode()" (click)="$event.stopPropagation()"
                         (change)="toggleDarkMode()">
                     </mat-slide-toggle>
                 </div>
 
                 <div class="settings-item" matRipple (click)="openLanguageSelection()">
-                    <div class="item-icon">
+                    <div class="item-icon lang">
                         <mat-icon>language</mat-icon>
                     </div>
                     <div class="item-content">
@@ -37,21 +44,30 @@
 
         <!-- Sécurité Section -->
         <section class="settings-section">
-            <h2 class="section-title">Sécurité</h2>
+            <h2 class="section-title">
+                <mat-icon>shield</mat-icon>
+                Sécurité
+            </h2>
             <div class="settings-card">
                 <div class="settings-item" matRipple (click)="openChangePIN()">
-                    <div class="item-icon">
+                    <div class="item-icon pin">
                         <mat-icon>lock</mat-icon>
                     </div>
-                    <span class="item-label">Changer le code PIN</span>
+                    <div class="item-content">
+                        <span class="item-label">Changer le code PIN</span>
+                        <span class="item-desc">Modifiez votre code secret</span>
+                    </div>
                     <mat-icon class="chevron">chevron_right</mat-icon>
                 </div>
 
                 <div class="settings-item" (click)="toggleBiometric()">
-                    <div class="item-icon">
+                    <div class="item-icon bio">
                         <mat-icon>fingerprint</mat-icon>
                     </div>
-                    <span class="item-label">Authentification biométrique</span>
+                    <div class="item-content">
+                        <span class="item-label">Authentification biométrique</span>
+                        <span class="item-desc">Utiliser l'empreinte digitale</span>
+                    </div>
                     <mat-slide-toggle [checked]="biometricAuth()" (click)="$event.stopPropagation()"
                         (change)="toggleBiometric()">
                     </mat-slide-toggle>
@@ -61,36 +77,30 @@
 
         <!-- Compte Section -->
         <section class="settings-section">
-            <h2 class="section-title">Compte</h2>
+            <h2 class="section-title">
+                <mat-icon>account_circle</mat-icon>
+                Compte
+            </h2>
             <div class="settings-card">
                 <div class="settings-item" matRipple (click)="openLinkedCards()">
-                    <div class="item-icon">
+                    <div class="item-icon card">
                         <mat-icon>credit_card</mat-icon>
                     </div>
-                    <span class="item-label">Cartes liées</span>
+                    <div class="item-content">
+                        <span class="item-label">Cartes liées</span>
+                        <span class="item-desc">Gérez vos cartes bancaires</span>
+                    </div>
                     <mat-icon class="chevron">chevron_right</mat-icon>
                 </div>
             </div>
         </section>
+
+        <!-- App Info -->
+        <div class="app-info">
+            <span>Mobile Money v1.0.0</span>
+        </div>
     </div>
 
     <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <a class="nav-item" routerLink="/dashboard">
-            <mat-icon>home</mat-icon>
-            <span>Accueil</span>
-        </a>
-        <a class="nav-item" routerLink="/transactions/history">
-            <mat-icon>history</mat-icon>
-            <span>Historique</span>
-        </a>
-        <a class="nav-item" routerLink="/profile">
-            <mat-icon>person_outline</mat-icon>
-            <span>Profil</span>
-        </a>
-        <a class="nav-item active" routerLink="/settings">
-            <mat-icon>settings</mat-icon>
-            <span>Paramètres</span>
-        </a>
-    </nav>
+    <app-bottom-nav></app-bottom-nav>
 </div>

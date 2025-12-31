@@ -7,9 +7,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatRippleModule } from '@angular/material/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import localeFr from '@angular/common/locales/fr';
 import { AuthService } from '../../../core/services/auth.service';
 import { WalletService } from '../../../core/services/wallet.service';
+import { ChangePasswordDialog } from './change-password-dialog';
+import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom-nav';
 
 // Register French locale for date formatting
 registerLocaleData(localeFr);
@@ -25,7 +28,9 @@ registerLocaleData(localeFr);
     MatIconModule,
     MatDividerModule,
     MatRippleModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatDialogModule,
+    BottomNavComponent
   ],
   templateUrl: './profile-view.html',
   styleUrl: './profile-view.scss',
@@ -35,6 +40,7 @@ export class ProfileView implements OnInit {
   private readonly walletService = inject(WalletService);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
 
   // Signals
   user = computed(() => this.authService.currentUserValue);
@@ -74,6 +80,13 @@ export class ProfileView implements OnInit {
   logout() {
     this.authService.logout();
     this.router.navigate(['/auth/login']);
+  }
+
+  openChangePasswordDialog() {
+    this.dialog.open(ChangePasswordDialog, {
+      width: '400px',
+      disableClose: false
+    });
   }
 
   tempAction(name: string) {

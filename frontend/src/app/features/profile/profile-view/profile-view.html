@@ -7,6 +7,9 @@
                 <mat-icon>arrow_back</mat-icon>
             </button>
             <h1>Mon Profil</h1>
+            <button class="edit-btn" routerLink="/profile/edit">
+                <mat-icon>edit</mat-icon>
+            </button>
         </div>
 
         <div class="profile-summary">
@@ -14,22 +17,48 @@
                 <div class="avatar">
                     <span>{{ initials() }}</span>
                 </div>
+                @if (user()?.kycLevel && user()!.kycLevel! > 0) {
+                <div class="verified-badge">
+                    <mat-icon>verified</mat-icon>
+                </div>
+                }
             </div>
             <h2>{{ user()?.nomComplet }}</h2>
             <span class="phone-number">{{ user()?.telephone }}</span>
+            <div class="role-badge" [class]="user()?.role">
+                {{ user()?.role === 'marchand' ? '🏪 Marchand' : user()?.role === 'admin' ? '👑 Admin' : '👤 Client' }}
+            </div>
         </div>
     </div>
 
     <!-- CONTENT -->
     <div class="content-wrapper">
 
+        <!-- STATS GRID -->
+        <div class="stats-grid">
+            <mat-card class="stat-card balance-stat">
+                <mat-icon class="stat-icon">account_balance_wallet</mat-icon>
+                <div class="stat-info">
+                    <div class="stat-value">{{ balance() | number:'1.0-0' }} <small>XOF</small></div>
+                    <div class="stat-label">Solde disponible</div>
+                </div>
+            </mat-card>
+            <mat-card class="stat-card savings-stat">
+                <mat-icon class="stat-icon">savings</mat-icon>
+                <div class="stat-info">
+                    <div class="stat-value">{{ savings() | number:'1.0-0' }} <small>XOF</small></div>
+                    <div class="stat-label">Épargne totale</div>
+                </div>
+            </mat-card>
+        </div>
+
         <!-- INFO PERSONNELLES -->
         <mat-card class="info-card">
             <div class="card-header-row">
-                <h3>Informations personnelles</h3>
-                <button mat-icon-button color="primary" routerLink="/profile/edit">
-                    <mat-icon>edit</mat-icon>
-                </button>
+                <h3>
+                    <mat-icon>person</mat-icon>
+                    Informations personnelles
+                </h3>
             </div>
             <div class="info-list">
                 <div class="info-item">
@@ -40,6 +69,7 @@
                         <span class="label">Téléphone</span>
                         <span class="value">{{ user()?.telephone }}</span>
                     </div>
+                    <mat-icon class="copy-icon" (click)="tempAction('Copié')">content_copy</mat-icon>
                 </div>
 
                 @if (user()?.email) {
@@ -56,6 +86,16 @@
 
                 <div class="info-item">
                     <div class="icon-box">
+                        <mat-icon>location_on</mat-icon>
+                    </div>
+                    <div class="info-text">
+                        <span class="label">Pays</span>
+                        <span class="value">{{ user()?.pays === 'BF' ? '🇧🇫 Burkina Faso' : user()?.pays === 'CI' ? '🇨🇮 Côte d\'Ivoire' : user()?.pays === 'SN' ? '🇸🇳 Sénégal' : user()?.pays }}</span>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="icon-box">
                         <mat-icon>calendar_today</mat-icon>
                     </div>
                     <div class="info-text">
@@ -66,77 +106,86 @@
             </div>
         </mat-card>
 
-        <!-- STATS GRID -->
-        <div class="stats-grid">
-            <mat-card class="stat-card">
-                <div class="stat-label">Solde compte</div>
-                <div class="stat-value">{{ balance() | number }} XOF</div>
-            </mat-card>
-            <mat-card class="stat-card">
-                <div class="stat-label">Épargne</div>
-                <div class="stat-value success">{{ savings() | number }} XOF</div>
-            </mat-card>
-        </div>
-
         <!-- MENU NAVIGATION -->
         <mat-card class="menu-card">
+            <h3 class="menu-title">
+                <mat-icon>menu</mat-icon>
+                Actions rapides
+            </h3>
+            
             <button class="menu-item" matRipple routerLink="/settings">
-                <div class="icon-box">
+                <div class="icon-box security">
                     <mat-icon>shield</mat-icon>
                 </div>
-                <span>Sécurité</span>
+                <div class="menu-text">
+                    <span class="menu-label">Sécurité</span>
+                    <span class="menu-desc">PIN, mot de passe</span>
+                </div>
                 <mat-icon class="chevron">chevron_right</mat-icon>
             </button>
 
-            <mat-divider></mat-divider>
+            <button class="menu-item" matRipple routerLink="/settings/change-pin">
+                <div class="icon-box pin">
+                    <mat-icon>lock</mat-icon>
+                </div>
+                <div class="menu-text">
+                    <span class="menu-label">Changer le code PIN</span>
+                    <span class="menu-desc">Modifiez votre code secret</span>
+                </div>
+                <mat-icon class="chevron">chevron_right</mat-icon>
+            </button>
 
-            <button class="menu-item" matRipple (click)="tempAction('Notifications')">
-                <div class="icon-box">
+            <button class="menu-item" matRipple (click)="openChangePasswordDialog()">
+                <div class="icon-box password">
+                    <mat-icon>vpn_key</mat-icon>
+                </div>
+                <div class="menu-text">
+                    <span class="menu-label">Changer le mot de passe</span>
+                    <span class="menu-desc">Modifiez votre mot de passe</span>
+                </div>
+                <mat-icon class="chevron">chevron_right</mat-icon>
+            </button>
+
+            <button class="menu-item" matRipple routerLink="/notifications">
+                <div class="icon-box notif">
                     <mat-icon>notifications</mat-icon>
                 </div>
-                <span>Notifications</span>
+                <div class="menu-text">
+                    <span class="menu-label">Notifications</span>
+                    <span class="menu-desc">Gérez vos alertes</span>
+                </div>
                 <mat-icon class="chevron">chevron_right</mat-icon>
             </button>
-
-            <mat-divider></mat-divider>
 
             <button class="menu-item" matRipple (click)="tempAction('Aide')">
-                <div class="icon-box">
-                    <mat-icon>help</mat-icon>
+                <div class="icon-box help">
+                    <mat-icon>help_outline</mat-icon>
                 </div>
-                <span>Aide & Support</span>
+                <div class="menu-text">
+                    <span class="menu-label">Aide & Support</span>
+                    <span class="menu-desc">FAQ, contact</span>
+                </div>
                 <mat-icon class="chevron">chevron_right</mat-icon>
             </button>
 
-            <mat-divider></mat-divider>
-
             <button class="menu-item logout" matRipple (click)="logout()">
-                <div class="icon-box">
+                <div class="icon-box logout-icon">
                     <mat-icon>logout</mat-icon>
                 </div>
-                <span>Déconnexion</span>
+                <div class="menu-text">
+                    <span class="menu-label">Déconnexion</span>
+                    <span class="menu-desc">Se déconnecter du compte</span>
+                </div>
             </button>
         </mat-card>
 
+        <!-- Version -->
+        <div class="app-version">
+            <span>Mobile Money App v1.0.0</span>
+        </div>
+
     </div>
 
-    <!-- BOTTOM NAV -->
-    <nav class="bottom-nav">
-        <a class="nav-item" routerLink="/dashboard">
-            <mat-icon>home</mat-icon>
-            <span>Accueil</span>
-        </a>
-        <a class="nav-item" routerLink="/transactions/history">
-            <mat-icon>history</mat-icon>
-            <span>Historique</span>
-        </a>
-        <a class="nav-item active" routerLink="/profile">
-            <mat-icon>person</mat-icon>
-            <span>Profil</span>
-        </a>
-        <a class="nav-item" routerLink="/settings">
-            <mat-icon>settings</mat-icon>
-            <span>Paramètres</span>
-        </a>
-    </nav>
+    <!-- Bottom Navigation -->
+    <app-bottom-nav></app-bottom-nav>
 </div>

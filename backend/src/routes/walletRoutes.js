@@ -12,6 +12,7 @@ router.get('/', walletController.getWallet);
 router.patch('/pin', walletController.setPin);
 router.post('/verify-pin', walletController.verifyPin);
 router.get('/transactions', walletController.getTransactions);
+router.get('/transactions/export', walletController.exportTransactions);
 router.get('/statistics', walletController.getStatistics);
 
 module.exports = router;

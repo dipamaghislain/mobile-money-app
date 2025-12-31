@@ -1,227 +1,325 @@
 <!-- frontend/src/app/features/admin/admin-dashboard/admin-dashboard.component.html -->
-<div class="admin-dashboard">
-  <!-- Header -->
-  <div class="dashboard-header">
-    <div class="header-content">
-      <h1>
-        <mat-icon>admin_panel_settings</mat-icon>
-        Administration
-      </h1>
-      <p>Tableau de bord et gestion du système</p>
+<div class="dashboard">
+  <!-- Welcome Banner -->
+  <div class="welcome-banner">
+    <div class="welcome-content">
+      <h1>Bienvenue sur votre tableau de bord 👋</h1>
+      <p>Voici un aperçu de l'activité de votre plateforme aujourd'hui</p>
     </div>
-    <button mat-icon-button (click)="refresh()" matTooltip="Actualiser">
-      <mat-icon>refresh</mat-icon>
-    </button>
+    <div class="welcome-date">
+      <mat-icon>calendar_today</mat-icon>
+      <span>{{ today | date:'EEEE d MMMM yyyy':'':'fr' }}</span>
+    </div>
   </div>
 
   <!-- Loading -->
   @if (loading()) {
-    <div class="loading-container">
-      <mat-spinner diameter="50"></mat-spinner>
-      <p>Chargement des données...</p>
+    <div class="loading-overlay">
+      <div class="loading-content">
+        <div class="spinner"></div>
+        <p>Chargement des données...</p>
+      </div>
     </div>
   }
 
-  <!-- Error -->
-  @if (error()) {
-    <mat-card class="error-card">
-      <mat-card-content>
-        <mat-icon>error</mat-icon>
-        <p>{{ error() }}</p>
-        <button mat-button color="primary" (click)="loadData()">Réessayer</button>
-      </mat-card-content>
-    </mat-card>
-  }
-
-  <!-- Content -->
   @if (!loading() && !error()) {
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-      @for (card of statsCards(); track card.title) {
-        <mat-card class="stat-card" [class]="card.color">
-          <mat-card-content>
-            <div class="stat-icon">
-              <mat-icon>{{ card.icon }}</mat-icon>
-            </div>
-            <div class="stat-info">
-              <span class="stat-value">
-                @if (card.isCurrency) {
-                  {{ card.value | currency:'XOF':'symbol':'1.0-0' }}
-                } @else {
-                  {{ card.value | number }}
-                }
-              </span>
-              <span class="stat-title">{{ card.title }}</span>
-              <span class="stat-subtitle">{{ card.subtitle }}</span>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      }
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card users">
+        <div class="kpi-header">
+          <div class="kpi-icon">
+            <mat-icon>people</mat-icon>
+          </div>
+          <div class="kpi-trend up">
+            <mat-icon>trending_up</mat-icon>
+            <span>+12%</span>
+          </div>
+        </div>
+        <div class="kpi-value">{{ statistics()?.utilisateurs?.total || 0 | number }}</div>
+        <div class="kpi-label">Utilisateurs totaux</div>
+        <div class="kpi-footer">
+          <span class="highlight">{{ statistics()?.utilisateurs?.actifs || 0 }}</span> actifs ce mois
+        </div>
+      </div>
+
+      <div class="kpi-card transactions">
+        <div class="kpi-header">
+          <div class="kpi-icon">
+            <mat-icon>receipt_long</mat-icon>
+          </div>
+          <div class="kpi-trend up">
+            <mat-icon>trending_up</mat-icon>
+            <span>+8%</span>
+          </div>
+        </div>
+        <div class="kpi-value">{{ statistics()?.transactions?.total || 0 | number }}</div>
+        <div class="kpi-label">Transactions totales</div>
+        <div class="kpi-footer">
+          <span class="highlight">{{ statistics()?.transactions?.derniers7jours || 0 }}</span> cette semaine
+        </div>
+      </div>
+
+      <div class="kpi-card volume">
+        <div class="kpi-header">
+          <div class="kpi-icon">
+            <mat-icon>payments</mat-icon>
+          </div>
+          <div class="kpi-trend up">
+            <mat-icon>trending_up</mat-icon>
+            <span>+23%</span>
+          </div>
+        </div>
+        <div class="kpi-value">{{ formatCurrency(statistics()?.transactions?.volumeTotal || 0) }}</div>
+        <div class="kpi-label">Volume total</div>
+        <div class="kpi-footer">
+          En <span class="highlight">FCFA</span>
+        </div>
+      </div>
+
+      <div class="kpi-card merchants">
+        <div class="kpi-header">
+          <div class="kpi-icon">
+            <mat-icon>store</mat-icon>
+          </div>
+          <div class="kpi-trend neutral">
+            <mat-icon>remove</mat-icon>
+            <span>0%</span>
+          </div>
+        </div>
+        <div class="kpi-value">{{ statistics()?.utilisateurs?.marchands || 0 | number }}</div>
+        <div class="kpi-label">Marchands actifs</div>
+        <div class="kpi-footer">
+          Comptes professionnels
+        </div>
+      </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="quick-actions">
-      <a mat-raised-button color="primary" routerLink="/admin/users">
-        <mat-icon>people</mat-icon>
-        Gérer les utilisateurs
-      </a>
-      <a mat-raised-button color="accent" routerLink="/admin/transactions">
-        <mat-icon>receipt_long</mat-icon>
-        Voir les transactions
-      </a>
-    </div>
-
-    <!-- Dashboard Grid -->
-    <div class="dashboard-grid">
-      <!-- Nouvelles inscriptions -->
-      <mat-card class="dashboard-card">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>person_add</mat-icon>
-          <mat-card-title>Nouvelles inscriptions</mat-card-title>
-          <mat-card-subtitle>7 derniers jours</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          @if (dashboard()?.nouvellesInscriptions?.length) {
-            <div class="user-list">
-              @for (user of dashboard()!.nouvellesInscriptions; track user._id) {
-                <div class="user-item">
-                  <div class="user-avatar">
-                    <mat-icon>person</mat-icon>
+    <!-- Main Grid -->
+    <div class="main-grid">
+      <!-- Transaction Overview -->
+      <div class="card chart-card">
+        <div class="card-header">
+          <div class="card-title">
+            <h3>Vue d'ensemble des transactions</h3>
+            <p>Répartition par type</p>
+          </div>
+          <div class="card-actions">
+            <button mat-stroked-button class="period-btn active">7j</button>
+            <button mat-stroked-button class="period-btn">30j</button>
+            <button mat-stroked-button class="period-btn">90j</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="transaction-stats">
+            @if (statistics()?.transactions?.parType) {
+              @for (stat of statistics()!.transactions.parType; track stat._id) {
+                <div class="stat-row">
+                  <div class="stat-info">
+                    <div class="stat-icon" [class]="stat._id.toLowerCase()">
+                      <mat-icon>{{ getTransactionIcon(stat._id) }}</mat-icon>
+                    </div>
+                    <div class="stat-text">
+                      <span class="stat-name">{{ getTransactionLabel(stat._id) }}</span>
+                      <span class="stat-count">{{ stat.count | number }} opérations</span>
+                    </div>
                   </div>
-                  <div class="user-info">
-                    <span class="user-name">{{ user.nomComplet }}</span>
-                    <span class="user-phone">{{ user.telephone }}</span>
-                  </div>
-                  <mat-chip [class]="user.role">{{ user.role }}</mat-chip>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="empty-message">Aucune nouvelle inscription</p>
-          }
-        </mat-card-content>
-        <mat-card-actions>
-          <a mat-button routerLink="/admin/users">Voir tous</a>
-        </mat-card-actions>
-      </mat-card>
-
-      <!-- Dernières transactions -->
-      <mat-card class="dashboard-card">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>receipt</mat-icon>
-          <mat-card-title>Dernières transactions</mat-card-title>
-          <mat-card-subtitle>Transactions réussies</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          @if (dashboard()?.dernieresTransactions?.length) {
-            <div class="transaction-list">
-              @for (tx of dashboard()!.dernieresTransactions; track tx._id) {
-                <div class="transaction-item">
-                  <mat-icon [class]="tx.type">{{ getTransactionIcon(tx.type) }}</mat-icon>
-                  <div class="transaction-info">
-                    <span class="transaction-type">{{ tx.type }}</span>
-                    <span class="transaction-date">{{ tx.dateCreation | date:'short' }}</span>
-                  </div>
-                  <span class="transaction-amount">{{ tx.montant | currency:'XOF':'symbol':'1.0-0' }}</span>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="empty-message">Aucune transaction</p>
-          }
-        </mat-card-content>
-        <mat-card-actions>
-          <a mat-button routerLink="/admin/transactions">Voir toutes</a>
-        </mat-card-actions>
-      </mat-card>
-
-      <!-- Transactions échouées -->
-      <mat-card class="dashboard-card alert-card">
-        <mat-card-header>
-          <mat-icon mat-card-avatar class="error">warning</mat-icon>
-          <mat-card-title>Alertes</mat-card-title>
-          <mat-card-subtitle>Transactions échouées récentes</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          @if (dashboard()?.transactionsEchouees?.length) {
-            <div class="alert-list">
-              @for (tx of dashboard()!.transactionsEchouees; track tx._id) {
-                <div class="alert-item">
-                  <mat-icon class="error">error</mat-icon>
-                  <div class="alert-info">
-                    <span class="alert-type">{{ tx.type }} - {{ tx.montant | currency:'XOF':'symbol':'1.0-0' }}</span>
-                    <span class="alert-message">{{ tx.messageErreur || 'Erreur inconnue' }}</span>
+                  <div class="stat-value">
+                    <span class="amount">{{ stat.volumeTotal | number:'1.0-0' }} F</span>
+                    <div class="progress-bar">
+                      <div class="progress" [style.width.%]="getProgressWidth(stat.volumeTotal)" [class]="stat._id.toLowerCase()"></div>
+                    </div>
                   </div>
                 </div>
               }
-            </div>
-          } @else {
-            <p class="empty-message success">
-              <mat-icon>check_circle</mat-icon>
-              Aucune alerte
-            </p>
-          }
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Utilisateurs bloqués -->
-      <mat-card class="dashboard-card">
-        <mat-card-header>
-          <mat-icon mat-card-avatar class="warn">block</mat-icon>
-          <mat-card-title>Utilisateurs bloqués</mat-card-title>
-          <mat-card-subtitle>Comptes désactivés</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          @if (dashboard()?.utilisateursBloques?.length) {
-            <div class="user-list">
-              @for (user of dashboard()!.utilisateursBloques; track user._id) {
-                <div class="user-item blocked">
-                  <div class="user-avatar">
-                    <mat-icon>person_off</mat-icon>
-                  </div>
-                  <div class="user-info">
-                    <span class="user-name">{{ user.nomComplet }}</span>
-                    <span class="user-phone">{{ user.telephone }}</span>
-                  </div>
-                  <a mat-icon-button [routerLink]="['/admin/users', user._id]" matTooltip="Voir détails">
-                    <mat-icon>visibility</mat-icon>
-                  </a>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="empty-message success">
-              <mat-icon>check_circle</mat-icon>
-              Aucun utilisateur bloqué
-            </p>
-          }
-        </mat-card-content>
-      </mat-card>
-    </div>
-
-    <!-- Statistics Details -->
-    @if (statistics()) {
-      <mat-card class="stats-detail-card">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>analytics</mat-icon>
-          <mat-card-title>Répartition des transactions</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stats-detail-grid">
-            @for (stat of statistics()!.transactions.parType; track stat._id) {
-              <div class="stat-detail-item">
-                <mat-icon>{{ getTransactionIcon(stat._id) }}</mat-icon>
-                <div class="stat-detail-info">
-                  <span class="stat-detail-type">{{ stat._id }}</span>
-                  <span class="stat-detail-count">{{ stat.count }} transactions</span>
-                  <span class="stat-detail-volume">{{ stat.volumeTotal | currency:'XOF':'symbol':'1.0-0' }}</span>
-                </div>
+            } @else {
+              <div class="empty-chart">
+                <mat-icon>insert_chart</mat-icon>
+                <p>Aucune donnée disponible</p>
               </div>
             }
           </div>
-        </mat-card-content>
-      </mat-card>
-    }
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="card activity-card">
+        <div class="card-header">
+          <div class="card-title">
+            <h3>Activité récente</h3>
+            <p>Dernières transactions</p>
+          </div>
+          <a mat-button color="primary" routerLink="/admin/transactions">
+            Voir tout
+            <mat-icon>arrow_forward</mat-icon>
+          </a>
+        </div>
+        <div class="card-body">
+          @if (dashboard()?.dernieresTransactions?.length) {
+            <div class="activity-list">
+              @for (tx of dashboard()!.dernieresTransactions.slice(0, 6); track tx._id) {
+                <div class="activity-item">
+                  <div class="activity-icon" [class]="tx.type.toLowerCase()">
+                    <mat-icon>{{ getTransactionIcon(tx.type) }}</mat-icon>
+                  </div>
+                  <div class="activity-info">
+                    <span class="activity-title">{{ getTransactionLabel(tx.type) }}</span>
+                    <span class="activity-time">{{ tx.dateCreation | date:'dd/MM à HH:mm' }}</span>
+                  </div>
+                  <div class="activity-amount" [class]="tx.type === 'DEPOSIT' ? 'credit' : 'debit'">
+                    {{ tx.type === 'DEPOSIT' ? '+' : '-' }}{{ tx.montant | number:'1.0-0' }} F
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-activity">
+              <mat-icon>history</mat-icon>
+              <p>Aucune transaction récente</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Grid -->
+    <div class="bottom-grid">
+      <!-- New Users -->
+      <div class="card users-card">
+        <div class="card-header">
+          <div class="card-title">
+            <h3>Nouveaux utilisateurs</h3>
+            <p>Inscriptions récentes</p>
+          </div>
+          <a mat-button color="primary" routerLink="/admin/users">
+            Gérer
+            <mat-icon>arrow_forward</mat-icon>
+          </a>
+        </div>
+        <div class="card-body">
+          @if (dashboard()?.nouvellesInscriptions?.length) {
+            <div class="users-list">
+              @for (user of dashboard()!.nouvellesInscriptions.slice(0, 5); track user._id) {
+                <div class="user-row">
+                  <div class="user-avatar" [style.background]="getAvatarColor(user.nomComplet)">
+                    {{ getInitials(user.nomComplet) }}
+                  </div>
+                  <div class="user-info">
+                    <span class="user-name">{{ user.nomComplet }}</span>
+                    <span class="user-phone">{{ user.telephone }}</span>
+                  </div>
+                  <div class="user-badge" [class]="user.role">
+                    {{ user.role }}
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-users">
+              <mat-icon>person_add</mat-icon>
+              <p>Aucune inscription récente</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div class="card alerts-card">
+        <div class="card-header">
+          <div class="card-title">
+            <h3>Alertes système</h3>
+            <p>Éléments nécessitant attention</p>
+          </div>
+        </div>
+        <div class="card-body">
+          @if (dashboard()?.transactionsEchouees?.length || dashboard()?.utilisateursBloques?.length) {
+            <div class="alerts-list">
+              @if (dashboard()?.transactionsEchouees?.length) {
+                <div class="alert-item error">
+                  <div class="alert-icon">
+                    <mat-icon>error</mat-icon>
+                  </div>
+                  <div class="alert-content">
+                    <span class="alert-title">{{ dashboard()!.transactionsEchouees.length }} transaction(s) échouée(s)</span>
+                    <span class="alert-desc">Nécessitent une vérification</span>
+                  </div>
+                  <mat-icon class="alert-arrow">chevron_right</mat-icon>
+                </div>
+              }
+              @if (dashboard()?.utilisateursBloques?.length) {
+                <div class="alert-item warning">
+                  <div class="alert-icon">
+                    <mat-icon>block</mat-icon>
+                  </div>
+                  <div class="alert-content">
+                    <span class="alert-title">{{ dashboard()!.utilisateursBloques.length }} compte(s) bloqué(s)</span>
+                    <span class="alert-desc">En attente de déblocage</span>
+                  </div>
+                  <mat-icon class="alert-arrow">chevron_right</mat-icon>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="success-state">
+              <div class="success-icon">
+                <mat-icon>check_circle</mat-icon>
+              </div>
+              <h4>Tout va bien !</h4>
+              <p>Aucune alerte à signaler</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card actions-card">
+        <div class="card-header">
+          <div class="card-title">
+            <h3>Actions rapides</h3>
+            <p>Accès fréquents</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="actions-grid">
+            <a class="action-btn" routerLink="/admin/users">
+              <div class="action-icon users">
+                <mat-icon>person_add</mat-icon>
+              </div>
+              <span>Ajouter utilisateur</span>
+            </a>
+            <a class="action-btn" routerLink="/admin/transactions">
+              <div class="action-icon transactions">
+                <mat-icon>search</mat-icon>
+              </div>
+              <span>Rechercher transaction</span>
+            </a>
+            <a class="action-btn" routerLink="/admin/settings">
+              <div class="action-icon settings">
+                <mat-icon>tune</mat-icon>
+              </div>
+              <span>Paramètres</span>
+            </a>
+            <a class="action-btn" routerLink="/admin/reports">
+              <div class="action-icon reports">
+                <mat-icon>download</mat-icon>
+              </div>
+              <span>Exporter rapport</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="error-state">
+      <mat-icon>cloud_off</mat-icon>
+      <h3>Erreur de chargement</h3>
+      <p>{{ error() }}</p>
+      <button mat-raised-button color="primary" (click)="loadData()">
+        <mat-icon>refresh</mat-icon>
+        Réessayer
+      </button>
+    </div>
   }
 </div>
-

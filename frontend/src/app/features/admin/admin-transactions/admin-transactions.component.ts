@@ -181,5 +181,45 @@ export class AdminTransactionsComponent implements OnInit {
       default: return statut;
     }
   }
+
+  getTransactionIcon(type: string): string {
+    switch (type) {
+      case 'DEPOSIT': return 'add_circle';
+      case 'WITHDRAW': return 'remove_circle';
+      case 'TRANSFER': return 'swap_horiz';
+      case 'MERCHANT_PAYMENT': return 'store';
+      case 'EPARGNE_IN': return 'savings';
+      case 'EPARGNE_OUT': return 'money_off';
+      default: return 'receipt';
+    }
+  }
+
+  getTransactionLabel(type: string): string {
+    const found = this.transactionTypes.find(t => t.value === type);
+    return found ? found.label : type;
+  }
+
+  getStatusIcon(statut: string): string {
+    switch (statut) {
+      case 'SUCCES': return 'check_circle';
+      case 'ECHEC': return 'cancel';
+      case 'EN_ATTENTE': return 'schedule';
+      default: return 'help';
+    }
+  }
+
+  getStatusCount(statut: string): number {
+    return this.transactions().filter(t => t.statut === statut).length;
+  }
+
+  hasActiveFilters(): boolean {
+    return !!this.typeFilter() || !!this.statutFilter() || !!this.telephoneFilter() || 
+           !!this.startDate() || !!this.endDate();
+  }
+
+  exportData(): void {
+    // Export functionality - could be CSV or Excel
+    console.log('Export data');
+  }
 }
 

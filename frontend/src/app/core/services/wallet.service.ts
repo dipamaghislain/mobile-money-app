@@ -93,4 +93,28 @@ export class WalletService {
         const params = new HttpParams().set('periode', periode.toString());
         return this.http.get<StatisticsResponse>(`${this.API_URL}/statistics`, { params });
     }
+
+    /**
+     * Exporte les transactions au format CSV ou JSON
+     */
+    exportTransactions(options?: {
+        format?: 'csv' | 'json';
+        type?: string;
+        startDate?: string;
+        endDate?: string;
+    }): Observable<Blob> {
+        let params = new HttpParams();
+
+        if (options) {
+            if (options.format) params = params.set('format', options.format);
+            if (options.type) params = params.set('type', options.type);
+            if (options.startDate) params = params.set('startDate', options.startDate);
+            if (options.endDate) params = params.set('endDate', options.endDate);
+        }
+
+        return this.http.get(`${this.API_URL}/transactions/export`, {
+            params,
+            responseType: 'blob'
+        });
+    }
 }

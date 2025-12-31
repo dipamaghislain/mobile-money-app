@@ -1,6 +1,6 @@
 // frontend/src/app/features/admin/admin-dashboard/admin-dashboard.component.ts
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,7 +24,6 @@ import { AdminService, SystemStatistics, DashboardData, AdminUser, AdminTransact
     MatTableModule,
     MatChipsModule,
     MatTooltipModule,
-    CurrencyPipe,
     DatePipe
   ],
   templateUrl: './admin-dashboard.component.html',
@@ -38,6 +37,7 @@ export class AdminDashboardComponent implements OnInit {
   dashboard = signal<DashboardData | null>(null);
   loading = signal(true);
   error = signal<string | null>(null);
+  lastUpdate = new Date();
 
   // Computed
   statsCards = computed(() => {
@@ -55,7 +55,7 @@ export class AdminDashboardComponent implements OnInit {
       {
         title: 'Marchands',
         value: stats.utilisateurs.marchands,
-        subtitle: 'Comptes marchands',
+        subtitle: 'Comptes professionnels',
         icon: 'store',
         color: 'accent'
       },
@@ -103,6 +103,7 @@ export class AdminDashboardComponent implements OnInit {
       next: (data) => {
         this.dashboard.set(data);
         this.loading.set(false);
+        this.lastUpdate = new Date();
       },
       error: (err) => {
         this.error.set(err.message || 'Erreur lors du chargement du tableau de bord');
@@ -132,8 +133,59 @@ export class AdminDashboardComponent implements OnInit {
     }
   }
 
+  getTransactionLabel(type: string): string {
+    switch (type) {
+      case 'DEPOSIT': return 'Dépôt';
+      case 'WITHDRAW': return 'Retrait';
+      case 'TRANSFER': return 'Transfert';
+      case 'MERCHANT_PAYMENT': return 'Paiement';
+      default: return type;
+    }
+  }
+
   refresh(): void {
     this.loadData();
+  }
+
+  // Date du jour
+  today = new Date();
+
+  // Formatage de devise
+  formatCurrency(value: number): string {
+    if (value >= 1000000) {
+      return (value / 1000000).toFixed(1) + 'M';
+    } else if (value >= 1000) {
+      return (value / 1000).toFixed(0) + 'K';
+    }
+    return value.toString();
+  }
+
+  // Calcul du pourcentage pour les barres de progression
+  getProgressWidth(value: number): number {
+    const stats = this.statistics();
+    if (!stats || !stats.transactions?.volumeTotal) return 0;
+    const maxVolume = stats.transactions.volumeTotal;
+    return Math.min((value / maxVolume) * 100, 100);
+  }
+
+  // Couleur d'avatar basée sur le nom
+  getAvatarColor(name: string): string {
+    const colors = [
+      '#6366f1', '#8b5cf6', '#ec4899', '#ef4444',
+      '#f59e0b', '#10b981', '#3b82f6', '#06b6d4'
+    ];
+    const index = name ? name.charCodeAt(0) % colors.length : 0;
+    return colors[index];
+  }
+
+  // Initiales du nom
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return parts[0].charAt(0) + parts[1].charAt(0);
+    }
+    return name.substring(0, 2).toUpperCase();
   }
 }
 

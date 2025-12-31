@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../core/services/auth.service';
+import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom-nav';
 
 @Component({
   selector: 'app-profile-edit',
@@ -24,7 +25,8 @@ import { AuthService } from '../../../core/services/auth.service';
     MatButtonModule,
     MatIconModule,
     MatCardModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    BottomNavComponent
   ],
   templateUrl: './profile-edit.html',
   styleUrl: './profile-edit.scss',

@@ -140,9 +140,8 @@ const systemParameterSchema = new mongoose.Schema({
 systemParameterSchema.index({ version: 1 }, { unique: true });
 
 // Middleware pre-save
-systemParameterSchema.pre('save', function(next) {
+systemParameterSchema.pre('save', function() {
   this.dateMiseAJour = Date.now();
-  next();
 });
 
 // Méthode statique pour obtenir les paramètres système

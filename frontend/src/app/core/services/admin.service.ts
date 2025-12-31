@@ -18,6 +18,10 @@ export interface AdminUser {
   codeMarchand?: string;
   nomCommerce?: string;
   dateCreation: Date;
+  wallet?: {
+    solde: number;
+    devise: string;
+  };
 }
 
 export interface UserListResponse {

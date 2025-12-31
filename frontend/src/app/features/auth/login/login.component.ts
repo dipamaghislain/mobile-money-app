@@ -56,8 +56,15 @@ export class LoginComponent implements OnInit {
     this.errorMessage = '';
 
     this.auth.login(this.loginForm.value).subscribe({
-      next: () => {
-        this.router.navigate(['/dashboard']);
+      next: (response) => {
+        // Si le PIN n'est pas configuré, rediriger vers setup-pin
+        if (response.user && !response.user.pinConfigured) {
+          this.router.navigate(['/auth/setup-pin']);
+        } else if (response.user?.role === 'admin') {
+          this.router.navigate(['/admin']);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       },
       error: (e) => {
         this.errorMessage = e.message;

@@ -1,18 +1,17 @@
 .profile-edit-container {
-  max-width: 720px;
-  margin: 24px auto;
-  padding: 24px;
-  border-radius: 16px;
-
-  /* look "pro" */
+  max-width: 560px;
+  margin: 40px auto 24px;
+  padding: 0;
+  border-radius: 20px;
   background: #fff;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-
-  /* meilleure lisibilité */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   box-sizing: border-box;
-  padding: 0 !important;
-  /* Reset padding for full width header */
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    margin: 16px;
+    border-radius: 16px;
+  }
 }
 
 .profile-card-header {

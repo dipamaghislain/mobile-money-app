@@ -1,198 +1,210 @@
 <!-- frontend/src/app/features/admin/admin-user-detail/admin-user-detail.component.html -->
-<div class="admin-user-detail">
-  <!-- Header -->
-  <div class="page-header">
-    <button mat-icon-button (click)="goBack()" class="back-btn">
+<div class="user-detail-page">
+  <!-- Breadcrumb & Back -->
+  <div class="page-nav">
+    <button mat-button class="back-btn" (click)="goBack()">
       <mat-icon>arrow_back</mat-icon>
+      <span>Retour aux utilisateurs</span>
     </button>
-    <h1>Détails de l'utilisateur</h1>
+    <div class="breadcrumb">
+      <a routerLink="/admin">Dashboard</a>
+      <mat-icon>chevron_right</mat-icon>
+      <a routerLink="/admin/users">Utilisateurs</a>
+      <mat-icon>chevron_right</mat-icon>
+      <span>Détails</span>
+    </div>
   </div>
 
   <!-- Loading -->
   @if (loading()) {
-    <div class="loading-container">
-      <mat-spinner diameter="40"></mat-spinner>
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement du profil...</p>
     </div>
   }
 
   <!-- Error -->
   @if (error()) {
-    <mat-card class="error-card">
-      <mat-card-content>
-        <mat-icon>error</mat-icon>
-        <p>{{ error() }}</p>
-        <button mat-button color="primary" (click)="loadUserDetail()">Réessayer</button>
-      </mat-card-content>
-    </mat-card>
+    <div class="error-state">
+      <mat-icon>error_outline</mat-icon>
+      <h3>Erreur de chargement</h3>
+      <p>{{ error() }}</p>
+      <button mat-raised-button color="primary" (click)="loadUserDetail()">
+        <mat-icon>refresh</mat-icon>
+        Réessayer
+      </button>
+    </div>
   }
 
   <!-- Content -->
   @if (!loading() && !error() && userDetail()) {
-    <div class="detail-grid">
-      <!-- User Info Card -->
-      <mat-card class="info-card user-card">
-        <mat-card-header>
-          <div class="user-avatar" mat-card-avatar>
+    <!-- User Header -->
+    <div class="user-header" [class.blocked]="userDetail()!.user.statut === 'bloque'">
+      <div class="user-avatar" [style.background]="getAvatarColor(userDetail()!.user.nomComplet)">
+        {{ getInitials(userDetail()!.user.nomComplet) }}
+      </div>
+      <div class="user-info">
+        <div class="user-name-row">
+          <h1>{{ userDetail()!.user.nomComplet }}</h1>
+          <span class="status-badge" [class]="userDetail()!.user.statut">
+            {{ userDetail()!.user.statut === 'actif' ? 'Actif' : 'Bloqué' }}
+          </span>
+        </div>
+        <div class="user-meta">
+          <span class="role-badge" [class]="userDetail()!.user.role">
             <mat-icon>{{ getRoleIcon(userDetail()!.user.role) }}</mat-icon>
-          </div>
-          <mat-card-title>{{ userDetail()!.user.nomComplet }}</mat-card-title>
-          <mat-card-subtitle>
-            <mat-chip [class]="getRoleClass(userDetail()!.user.role)">
-              {{ userDetail()!.user.role }}
-            </mat-chip>
-            <mat-chip [class]="userDetail()!.user.statut === 'actif' ? 'status-active' : 'status-blocked'">
-              {{ userDetail()!.user.statut }}
-            </mat-chip>
-          </mat-card-subtitle>
-        </mat-card-header>
-
-        <mat-card-content>
-          <div class="info-list">
-            <div class="info-item">
-              <mat-icon>phone</mat-icon>
-              <div class="info-content">
-                <span class="info-label">Téléphone</span>
-                <span class="info-value">{{ userDetail()!.user.telephone }}</span>
-              </div>
-            </div>
-
-            @if (userDetail()!.user.email) {
-              <div class="info-item">
-                <mat-icon>email</mat-icon>
-                <div class="info-content">
-                  <span class="info-label">Email</span>
-                  <span class="info-value">{{ userDetail()!.user.email }}</span>
-                </div>
-              </div>
-            }
-
-            <div class="info-item">
-              <mat-icon>calendar_today</mat-icon>
-              <div class="info-content">
-                <span class="info-label">Date d'inscription</span>
-                <span class="info-value">{{ userDetail()!.user.dateCreation | date:'dd MMMM yyyy à HH:mm' }}</span>
-              </div>
-            </div>
-
-            @if (userDetail()!.user.codeMarchand) {
-              <div class="info-item">
-                <mat-icon>qr_code</mat-icon>
-                <div class="info-content">
-                  <span class="info-label">Code Marchand</span>
-                  <span class="info-value code">{{ userDetail()!.user.codeMarchand }}</span>
-                </div>
-              </div>
-            }
-
-            @if (userDetail()!.user.nomCommerce) {
-              <div class="info-item">
-                <mat-icon>storefront</mat-icon>
-                <div class="info-content">
-                  <span class="info-label">Nom du commerce</span>
-                  <span class="info-value">{{ userDetail()!.user.nomCommerce }}</span>
-                </div>
-              </div>
-            }
-          </div>
-        </mat-card-content>
-
+            {{ getRoleLabel(userDetail()!.user.role) }}
+          </span>
+          <span class="separator">•</span>
+          <span class="date">Inscrit le {{ userDetail()!.user.dateCreation | date:'dd MMMM yyyy' }}</span>
+        </div>
+      </div>
+      <div class="user-actions">
         @if (userDetail()!.user.role !== 'admin') {
-          <mat-card-actions>
-            <button mat-raised-button 
-                    [color]="userDetail()!.user.statut === 'actif' ? 'warn' : 'primary'"
-                    (click)="toggleUserStatus()"
-                    [disabled]="updating()">
-              @if (updating()) {
-                <mat-spinner diameter="20"></mat-spinner>
-              } @else {
-                <ng-container matButtonIcon>
-                  <mat-icon>{{ userDetail()!.user.statut === 'actif' ? 'block' : 'check_circle' }}</mat-icon>
-                  {{ userDetail()!.user.statut === 'actif' ? 'Bloquer' : 'Débloquer' }}
-                </ng-container>
-              }
+          @if (userDetail()!.user.statut === 'bloque') {
+            <button mat-raised-button color="primary" (click)="toggleUserStatus()" [disabled]="updating()">
+              <mat-icon>lock_open</mat-icon>
+              Débloquer
             </button>
-          </mat-card-actions>
+          } @else {
+            <button mat-raised-button color="warn" (click)="toggleUserStatus()" [disabled]="updating()">
+              <mat-icon>block</mat-icon>
+              Bloquer
+            </button>
+          }
         }
-      </mat-card>
+        <button mat-stroked-button [routerLink]="['/admin/transactions']" [queryParams]="{telephone: userDetail()!.user.telephone}">
+          <mat-icon>receipt_long</mat-icon>
+          Transactions
+        </button>
+      </div>
+    </div>
 
-      <!-- Wallet Card -->
-      @if (userDetail()!.wallet) {
-        <mat-card class="info-card wallet-card">
-          <mat-card-header>
-            <mat-icon mat-card-avatar>account_balance_wallet</mat-icon>
-            <mat-card-title>Portefeuille</mat-card-title>
-            <mat-card-subtitle>Informations financières</mat-card-subtitle>
-          </mat-card-header>
+    <!-- Content Grid -->
+    <div class="content-grid">
+      <!-- Contact Info -->
+      <div class="card info-card">
+        <div class="card-header">
+          <mat-icon>contact_page</mat-icon>
+          <h3>Informations de contact</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <div class="info-icon">
+              <mat-icon>phone</mat-icon>
+            </div>
+            <div class="info-content">
+              <span class="label">Téléphone</span>
+              <span class="value">{{ userDetail()!.user.telephone }}</span>
+            </div>
+            <button mat-icon-button matTooltip="Copier" (click)="copyToClipboard(userDetail()!.user.telephone)">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+          
+          @if (userDetail()!.user.email) {
+            <div class="info-row">
+              <div class="info-icon">
+                <mat-icon>email</mat-icon>
+              </div>
+              <div class="info-content">
+                <span class="label">Email</span>
+                <span class="value">{{ userDetail()!.user.email }}</span>
+              </div>
+              <button mat-icon-button matTooltip="Copier" (click)="copyToClipboard(userDetail()!.user.email!)">
+                <mat-icon>content_copy</mat-icon>
+              </button>
+            </div>
+          }
+          
+          @if (userDetail()!.user.codeMarchand) {
+            <div class="info-row">
+              <div class="info-icon merchant">
+                <mat-icon>qr_code</mat-icon>
+              </div>
+              <div class="info-content">
+                <span class="label">Code Marchand</span>
+                <span class="value code">{{ userDetail()!.user.codeMarchand }}</span>
+              </div>
+            </div>
+          }
+          
+          @if (userDetail()!.user.nomCommerce) {
+            <div class="info-row">
+              <div class="info-icon merchant">
+                <mat-icon>store</mat-icon>
+              </div>
+              <div class="info-content">
+                <span class="label">Nom du commerce</span>
+                <span class="value">{{ userDetail()!.user.nomCommerce }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
 
-          <mat-card-content>
-            <div class="wallet-balance">
+      <!-- Wallet Info -->
+      <div class="card wallet-card">
+        <div class="card-header">
+          <mat-icon>account_balance_wallet</mat-icon>
+          <h3>Portefeuille</h3>
+        </div>
+        <div class="card-body">
+          @if (userDetail()!.wallet) {
+            <div class="balance-display">
               <span class="balance-label">Solde actuel</span>
-              <span class="balance-value">
-                {{ userDetail()!.wallet!.solde | currency:userDetail()!.wallet!.devise:'symbol':'1.0-0' }}
+              <span class="balance-value">{{ userDetail()!.wallet!.solde | number:'1.0-0' }} <small>{{ userDetail()!.wallet!.devise }}</small></span>
+              <span class="wallet-status" [class]="userDetail()!.wallet!.statut">
+                {{ userDetail()!.wallet!.statut }}
               </span>
             </div>
-
-            <mat-divider></mat-divider>
-
-            <div class="wallet-info">
-              <div class="wallet-item">
-                <span class="wallet-label">Devise</span>
-                <span class="wallet-value">{{ userDetail()!.wallet!.devise }}</span>
-              </div>
-              <div class="wallet-item">
-                <span class="wallet-label">Statut</span>
-                <mat-chip [class]="userDetail()!.wallet!.statut === 'actif' ? 'status-active' : 'status-blocked'">
-                  {{ userDetail()!.wallet!.statut }}
-                </mat-chip>
-              </div>
+          } @else {
+            <div class="no-wallet">
+              <mat-icon>warning</mat-icon>
+              <p>Aucun portefeuille associé</p>
             </div>
-          </mat-card-content>
-        </mat-card>
-      }
+          }
+        </div>
+      </div>
 
-      <!-- Statistics Card -->
-      <mat-card class="info-card stats-card">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>analytics</mat-icon>
-          <mat-card-title>Statistiques</mat-card-title>
-          <mat-card-subtitle>Activité de l'utilisateur</mat-card-subtitle>
-        </mat-card-header>
-
-        <mat-card-content>
+      <!-- Statistics -->
+      <div class="card stats-card">
+        <div class="card-header">
+          <mat-icon>analytics</mat-icon>
+          <h3>Statistiques</h3>
+        </div>
+        <div class="card-body">
           <div class="stats-grid">
             <div class="stat-item">
-              <mat-icon>receipt_long</mat-icon>
-              <div class="stat-content">
+              <div class="stat-icon transactions">
+                <mat-icon>receipt_long</mat-icon>
+              </div>
+              <div class="stat-info">
                 <span class="stat-value">{{ userDetail()!.statistiques.nombreTransactions }}</span>
                 <span class="stat-label">Transactions</span>
               </div>
             </div>
-
             <div class="stat-item">
-              <mat-icon>savings</mat-icon>
-              <div class="stat-content">
+              <div class="stat-icon savings">
+                <mat-icon>savings</mat-icon>
+              </div>
+              <div class="stat-info">
                 <span class="stat-value">{{ userDetail()!.statistiques.nombreTirelires }}</span>
                 <span class="stat-label">Tirelires</span>
               </div>
             </div>
-
             <div class="stat-item">
-              <mat-icon>account_balance</mat-icon>
-              <div class="stat-content">
-                <span class="stat-value">{{ userDetail()!.statistiques.totalEpargne | currency:'XOF':'symbol':'1.0-0' }}</span>
-                <span class="stat-label">Total épargné</span>
+              <div class="stat-icon total">
+                <mat-icon>trending_up</mat-icon>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">{{ userDetail()!.statistiques.totalEpargne | number:'1.0-0' }} F</span>
+                <span class="stat-label">Épargne totale</span>
               </div>
             </div>
           </div>
-        </mat-card-content>
-
-        <mat-card-actions>
-          <a mat-button [routerLink]="['/admin/transactions']" [queryParams]="{telephone: userDetail()!.user.telephone}">
-            <mat-icon>history</mat-icon>
-            Voir les transactions
-          </a>
-        </mat-card-actions>
-      </mat-card>
+        </div>
+      </div>
     </div>
   }
 </div>

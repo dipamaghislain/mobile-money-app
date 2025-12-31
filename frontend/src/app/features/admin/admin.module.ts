@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 
+import { AdminLayoutComponent } from './admin-layout/admin-layout.component';
 import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
 import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { AdminUserDetailComponent } from './admin-user-detail/admin-user-detail.component';
@@ -11,19 +12,13 @@ import { AdminTransactionsComponent } from './admin-transactions/admin-transacti
 const routes: Routes = [
   {
     path: '',
-    component: AdminDashboardComponent
-  },
-  {
-    path: 'users',
-    component: AdminUsersComponent
-  },
-  {
-    path: 'users/:id',
-    component: AdminUserDetailComponent
-  },
-  {
-    path: 'transactions',
-    component: AdminTransactionsComponent
+    component: AdminLayoutComponent,
+    children: [
+      { path: '', component: AdminDashboardComponent },
+      { path: 'users', component: AdminUsersComponent },
+      { path: 'users/:id', component: AdminUserDetailComponent },
+      { path: 'transactions', component: AdminTransactionsComponent },
+    ]
   }
 ];
 
@@ -31,7 +26,7 @@ const routes: Routes = [
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
-    // Standalone components
+    AdminLayoutComponent,
     AdminDashboardComponent,
     AdminUsersComponent,
     AdminUserDetailComponent,
